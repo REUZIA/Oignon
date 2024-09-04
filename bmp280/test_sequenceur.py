@@ -9,6 +9,7 @@ i2c0 = I2C(0, sda=i2c0_sda, scl=i2c0_scl, freq=400000)
 bmp280_i2c = BMP280I2C(0x77, i2c0)  # address may be different
 
 liste_valeur=[]
+liste_variations=[]
 var_position= 0
 
 while True:
@@ -24,6 +25,9 @@ while True:
 
     #calculer la dérivé 
     variations = [(liste_valeur[i + 1] - liste_valeur[i]) for i in range(len(liste_valeur) - 1)]
-
+    liste_variation.append(variation)
+    #regarder l"état de la variation en vérifiant la valeur précédente et la valeur actuel 
+    # il faudrait faire un cas ou on s'approche de l'apogee mais pour ça il me faut mes premières variables de variations pour déterminer la bonne valeur
+    #envoyer la detection d'apogee
 
     sleep(1)
