@@ -2,7 +2,7 @@ import time
 from machine import Pin, I2C
 import icm20948
 
-class ICM20948Sensor:
+class ICM20948AccGyr:
     def __init__(self, i2c: I2C):
         self.icm = icm20948.ICM20948(i2c)
 
@@ -38,7 +38,7 @@ class ICM20948Sensor:
 if __name__ == "__main__":
     # # I2C pin ICM20948
     i2c = I2C(0, sda=Pin(0), scl=Pin(1))
-    sen = ICM20948Sensor(i2c)
+    sen = ICM20948AccGyr(i2c)
     sen.to_sleep()
     print(sen.icm.sleep)
     sen.to_awake()
