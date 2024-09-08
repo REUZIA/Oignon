@@ -19,7 +19,7 @@ class ICM20948AccGyr:
     def to_sleep(self) -> None:
         self.icm.sleep = icm20948.SLEEP_ENABLED
 
-    def to_awake(self) -> None:
+    def wake_up(self) -> None:
         self.icm.sleep = icm20948.SLEEP_DISABLED
 
     @property

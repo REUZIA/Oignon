@@ -1,9 +1,11 @@
 import time
 import os
 import sdcard
-from machine import Pin, I2C,SPI
+from machine import Pin, I2C,SPI,UART
 from ICM20948AccGyr import ICM20948AccGyr
 from SDOignon import SDOignon
+from utime import sleep
+from micropyGPS import MicropyGPS  # https://github.com/inmcm/micropyGPS
 
 def sdtest():
     spi = SPI(1,baudrate = 10000,polarity=1,phase=0,mosi=Pin(11),sck=Pin(10),miso=Pin(12))
@@ -64,8 +66,8 @@ def sdtest():
 
 # ! à fair
 if __name__ == "__main__":
-    # I2C pin ICM20948
-    i2c = I2C(0, sda=Pin(0), scl=Pin(1))
+    # I2C pin ICM20948 
+    i2c = I2C(0, sda=Pin(0), scl=Pin(1)) # SDA : GPIO0 ; SCL : GPIO1
     sen = ICM20948AccGyr(i2c)
     sen.to_sleep()
     print(sen.icm.sleep)
@@ -84,4 +86,21 @@ if __name__ == "__main__":
     
     print("pass ICM20948")
 
-    sdtest()
+    sdtest() # CS : GPIO10 ; mosi : GPIO11,SCK : GPIO10,miso : GPIO12 
+
+    uart= UART(1,baudrate=9600)  # initialisation UART 1 # TX : GPIO4 ; RX : GPIO 5 
+    gps = MicropyGPS() # création d'un objet GPS
+
+    if uart.any():  
+        donnees_brutes = str(uart.readline())
+        for x in donnees_brutes:
+            gps.update(x)
+
+        print('Latitude: ' ,gps.latitude_string())
+        print('Latitude (tuple): ' , gps.latitude)
+        print('Longitude: ' ,gps.longitude_string())
+        print('Longitude (tuple): ' , gps.longitude)
+        print('Altitude: ' , gps.altitude)
+        print('Vitesse: ', gps.speed_string('kph'))
+        print('Date: ' , gps.date_string('s_dmy'))
+        print('')
