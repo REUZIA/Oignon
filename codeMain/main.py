@@ -3,6 +3,7 @@ from machine import Pin, I2C
 from ICM20948AccGyr import ICM20948AccGyr
 from SDOignon import SDOignon
 from GPSdata import GPSdata
+from lora import LoRaTransceiver
 
 mainModuleOn = 0
 if __name__ == "__main__":
@@ -24,6 +25,9 @@ if __name__ == "__main__":
     
     gp = GPSdata(1)
 
+    lora = LoRaTransceiver()
+    lora.setup()
+
     #? maitre le composant en sleep mode 
     senAccGyr.to_sleep()
     gp.to_sleep()
@@ -31,6 +35,7 @@ if __name__ == "__main__":
     while True:
         time.sleep(timeWaitBoucl)
         # detecter si on veut alluer 
+        
         if mainModuleOn:# on allume les modules
             print("allumer")
             senAccGyr.wake_up()
@@ -47,6 +52,7 @@ if __name__ == "__main__":
             # envoyer carte sd
             sd.add(res)
             # envoyer gnd station
+            lora.send(res)
             #? detecter si off
 
             if not mainModuleOn:# on etteint les modules
