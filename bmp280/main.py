@@ -1,231 +1,322 @@
-import machine, neopixel, bmp280, time
-import _thread
-from machine import Pin, I2C, Timer
-from micropython import const, schedule
-from collections import deque
-import rp2
+from micropython import const
+from machine import I2C, Pin
+import utime as time
+import ustruct
 
-servo_open = const(900_000)
-servo_closed = const(1_850_000)
+# Constantes pour le BMP280
+_BMP280_ADDRESS_76 = const(0x76)  # Adresse I2C par défaut
+_BMP280_ADDRESS_77 = const(0x77)  # Adresse alternative
 
-optimal_delay = const(9000)
+_BMP280_REGISTER_CHIPID = const(0xD0)
+_BMP280_REGISTER_RESET = const(0xE0)
+_BMP280_REGISTER_STATUS = const(0xF3)
+_BMP280_REGISTER_CONTROL = const(0xF4)
+_BMP280_REGISTER_CONFIG = const(0xF5)
+_BMP280_REGISTER_PRESSUREDATA = const(0xF7)
+_BMP280_REGISTER_TEMPDATA = const(0xFA)
+_BMP280_REGISTER_DIG_T1 = const(0x88)
+_BMP280_REGISTER_DIG_T2 = const(0x8A)
+_BMP280_REGISTER_DIG_T3 = const(0x8C)
+_BMP280_REGISTER_DIG_P1 = const(0x8E)
+_BMP280_REGISTER_DIG_P2 = const(0x90)
+_BMP280_REGISTER_DIG_P3 = const(0x92)
+_BMP280_REGISTER_DIG_P4 = const(0x94)
+_BMP280_REGISTER_DIG_P5 = const(0x96)
+_BMP280_REGISTER_DIG_P6 = const(0x98)
+_BMP280_REGISTER_DIG_P7 = const(0x9A)
+_BMP280_REGISTER_DIG_P8 = const(0x9C)
+_BMP280_REGISTER_DIG_P9 = const(0x9E)
 
-altitude_treshold = const(15) # for launch detection in m
-speed_treshold = const(3) # m/s
-min_delay = const(1000)
-max_delay = const(optimal_delay+1000)
+# Modes de puissance
+BMP280_POWER_SLEEP = const(0)
+BMP280_POWER_FORCED = const(1)
+BMP280_POWER_NORMAL = const(3)
 
-max_alt = const(300) # Force deployment at this altitude
+# Oversampling
+BMP280_OS_ULTRALOW = const(0)
+BMP280_OS_LOW = const(1)
+BMP280_OS_STANDARD = const(2)
+BMP280_OS_HIGH = const(3)
+BMP280_OS_ULTRAHIGH = const(4)
 
-# Colors
-COLOR_RED = const((255, 0, 0)) # STANDBY blink
-COLOR_GREEN = const((0, 255, 0)) # STANDBY blink and forced deployment
-COLOR_BLUE = const((0, 0, 255)) # LAUNCHED
-COLOR_WHITE = const((255, 255, 255)) # DEPLOYED
-COLOR_BLACK = const((0, 0, 0)) # OFF
+# Standby settings in ms
+BMP280_STANDBY_0_5 = const(0)
+BMP280_STANDBY_62_5 = const(1)
+BMP280_STANDBY_125 = const(2)
+BMP280_STANDBY_250 = const(3)
+BMP280_STANDBY_500 = const(4)
+BMP280_STANDBY_1000 = const(5)
+BMP280_STANDBY_2000 = const(6)
+BMP280_STANDBY_4000 = const(7)
 
-# STATUS
-STATUS_STANDBY = const(0)
-STATUS_LAUNCHED = const(1)
-STATUS_DEPLOYED = const(2)
-STATUS_TOUCHDOWN = const(3)
+# IIR Filter setting
+BMP280_IIR_FILTER_OFF = const(0)
+BMP280_IIR_FILTER_2 = const(1)
+BMP280_IIR_FILTER_4 = const(2)
+BMP280_IIR_FILTER_8 = const(3)
+BMP280_IIR_FILTER_16 = const(4)
 
-# FRAME TYPES
-FRAME_LOG = const(0)
-FRAME_BMP = const(1)
-FRAME_SPEED = const(2)
+# Matrix de suréchantillonnage (Oversampling)
+_BMP280_OS_MATRIX = [
+    [1, 1, 7],
+    [2, 1, 9],
+    [4, 1, 14],
+    [8, 1, 23],
+    [16, 2, 44]
+]
 
-status = STATUS_STANDBY
+# Cas d'utilisation
+BMP280_CASE_HANDHELD_LOW = const(0)
+BMP280_CASE_HANDHELD_DYN = const(1)
+BMP280_CASE_WEATHER = const(2)
+BMP280_CASE_FLOOR = const(3)
+BMP280_CASE_DROP = const(4)
+BMP280_CASE_INDOOR = const(5)
 
-ticks_launched = 0
-ticks_deployed = 0
-ticks_touchdown = 0
+# Matrix pour les cas d'utilisation
+_BMP280_CASE_MATRIX = [
+    [BMP280_POWER_NORMAL, BMP280_OS_ULTRAHIGH, BMP280_IIR_FILTER_4, BMP280_STANDBY_62_5],
+    [BMP280_POWER_NORMAL, BMP280_OS_STANDARD, BMP280_IIR_FILTER_16, BMP280_STANDBY_0_5],
+    [BMP280_POWER_FORCED, BMP280_OS_ULTRALOW, BMP280_IIR_FILTER_OFF, BMP280_STANDBY_0_5],
+    [BMP280_POWER_NORMAL, BMP280_OS_STANDARD, BMP280_IIR_FILTER_4, BMP280_STANDBY_125],
+    [BMP280_POWER_NORMAL, BMP280_OS_LOW, BMP280_IIR_FILTER_OFF, BMP280_STANDBY_0_5],
+    [BMP280_POWER_NORMAL, BMP280_OS_ULTRAHIGH, BMP280_IIR_FILTER_16, BMP280_STANDBY_0_5]
+]
 
-timeout = const(10_000)
+class BMP280:
+    def __init__(self, i2c, addr=_BMP280_ADDRESS_76, use_case=BMP280_CASE_HANDHELD_DYN):
+        self.i2c = i2c
+        self.addr = addr
 
-led = neopixel.NeoPixel(Pin(16), 1)
+        # Lire les données de calibration
+        self._T1 = ustruct.unpack('<H', self._read(_BMP280_REGISTER_DIG_T1, 2))[0]
+        self._T2 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_T2, 2))[0]
+        self._T3 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_T3, 2))[0]
+        self._P1 = ustruct.unpack('<H', self._read(_BMP280_REGISTER_DIG_P1, 2))[0]
+        self._P2 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_P2, 2))[0]
+        self._P3 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_P3, 2))[0]
+        self._P4 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_P4, 2))[0]
+        self._P5 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_P5, 2))[0]
+        self._P6 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_P6, 2))[0]
+        self._P7 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_P7, 2))[0]
+        self._P8 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_P8, 2))[0]
+        self._P9 = ustruct.unpack('<h', self._read(_BMP280_REGISTER_DIG_P9, 2))[0]
 
-buzz = Pin(7, Pin.OUT)
-buzz.off()
+        # Initialisation des variables internes
+        self._t_raw = 0
+        self._t_fine = 0
+        self._t = 0
 
-bmp = bmp280.BMP280(I2C(0, sda=Pin(4), scl=Pin(5)), use_case=bmp280.BMP280_CASE_HANDHELD_DYN)
-bmp_refresh_period = const(13)
-bmp_last_measure_ticks = 0
+        self._p_raw = 0
+        self._p = 0
 
-servo = machine.PWM(Pin(13))
-servo.freq(50)
-servo.duty_ns(servo_closed)
+        self.read_wait_ms = 0  # intervalle entre la mesure forcée et la lecture
+        self._new_read_ms = 200  # intervalle entre les lectures
+        self._last_read_ts = 0
 
-measure_buffer = deque((), 80)
-log_buffer = deque((), 100)
-log_buffer.append(f"{time.ticks_ms()}|{FRAME_LOG}|START")
+        if use_case is not None:
+            self.use_case(use_case)
 
-def flush_logs(buffer):
-    f = open("DATA.txt", "a")
-    last_flush = 0
-    
+    def _read(self, addr, size=1):
+        """Lecture des données depuis le registre I2C spécifié."""
+        return self.i2c.readfrom_mem(self.addr, addr, size)
+
+    def _write(self, addr, data):
+        """Écriture des données dans le registre I2C spécifié."""
+        if not isinstance(data, bytearray):
+            data = bytearray([data])
+        self.i2c.writeto_mem(self.addr, addr, data)
+
+    def _gauge(self):
+        """Lecture de toutes les données de capteur en une fois (comme spécifié dans le document technique)."""
+        d = self._read(_BMP280_REGISTER_PRESSUREDATA, 6)
+
+        self._p_raw = (d[0] << 12) + (d[1] << 4) + (d[2] >> 4)
+        self._t_raw = (d[3] << 12) + (d[4] << 4) + (d[5] >> 4)
+
+        self._t_fine = 0
+        self._t = 0
+        self._p = 0
+
+    def reset(self):
+        """Réinitialise le capteur BMP280."""
+        self._write(_BMP280_REGISTER_RESET, 0xB6)
+
+    def load_test_calibration(self):
+        """Charge les données de calibration de test."""
+        self._T1 = 27504
+        self._T2 = 26435
+        self._T3 = -1000
+        self._P1 = 36477
+        self._P2 = -10685
+        self._P3 = 3024
+        self._P4 = 2855
+        self._P5 = 140
+        self._P6 = -7
+        self._P7 = 15500
+        self._P8 = -14600
+        self._P9 = 6000
+
+    def load_test_data(self):
+        """Charge les données de test pour température et pression."""
+        self._t_raw = 519888
+        self._p_raw = 415148
+
+    def print_calibration(self):
+        """Affiche les données de calibration."""
+        print("T1: {} {}".format(self._T1, type(self._T1)))
+        print("T2: {} {}".format(self._T2, type(self._T2)))
+        print("T3: {} {}".format(self._T3, type(self._T3)))
+        print("P1: {} {}".format(self._P1, type(self._P1)))
+        print("P2: {} {}".format(self._P2, type(self._P2)))
+        print("P3: {} {}".format(self._P3, type(self._P3)))
+        print("P4: {} {}".format(self._P4, type(self._P4)))
+        print("P5: {} {}".format(self._P5, type(self._P5)))
+        print("P6: {} {}".format(self._P6, type(self._P6)))
+        print("P7: {} {}".format(self._P7, type(self._P7)))
+        print("P8: {} {}".format(self._P8, type(self._P8)))
+        print("P9: {} {}".format(self._P9, type(self._P9)))
+
+    @property
+    def chip_id(self):
+        """Renvoie l'identifiant unique du capteur BMP280."""
+        return self._read(_BMP280_REGISTER_CHIPID, 1)[0]
+
+    @property
+    def temperature(self):
+        """Calcul et renvoie la température en degrés Celsius."""
+        if (self._t == 0) and (self._t_raw > 0):
+            var1 = ((((self._t_raw >> 3) - (self._T1 << 1))) * (self._T2)) >> 11
+            var2 = (((((self._t_raw >> 4) - (self._T1)) * ((self._t_raw >> 4) - (self._T1))) >> 12) * (self._T3)) >> 14
+            self._t_fine = var1 + var2
+            self._t = (self._t_fine * 5 + 128) >> 8
+
+        return self._t / 100.0  # température en degrés Celsius
+
+    @property
+    def pressure(self):
+        """Calcul et renvoie la pression en Pascals."""
+        if (self._p == 0) and (self._p_raw > 0) and (self._t_fine > 0):
+            var1 = (self._t_fine) - 128000
+            var2 = var1 * var1 * self._P6
+            var2 = var2 + ((var1 * self._P5) << 17)
+            var2 = var2 + ((self._P4) << 35)
+            var1 = ((var1 * var1 * self._P3) >> 8) + ((var1 * self._P2) << 12)
+            var1 = (((1) << 47) + var1) * (self._P1) >> 33
+
+            if var1 == 0:
+                return 0
+
+            p = 1048576 - self._p_raw
+            p = (((p << 31) - var2) * 3125) // var1
+            var1 = ((self._P9) * (p >> 13) * (p >> 13)) >> 25
+            var2 = ((self._P8) * p) >> 19
+            p = ((p + var1 + var2) >> 8) + ((self._P7) << 4)
+
+            self._p = p
+
+        return self._p / 256.0  # pression en Pascals
+
+    def use_case(self, case):
+        """Configure le capteur selon un cas d'utilisation prédéfini."""
+        self.power_mode, os_mode, iir_mode, standby = _BMP280_CASE_MATRIX[case]
+
+        # Mise à jour de l'intervalle d'attente entre lecture et mesure forcée
+        self._new_read_ms = 1000 * (_BMP280_OS_MATRIX[os_mode][2] + 0.5) / 1000
+
+        # Configuration du capteur BMP280 selon le cas d'utilisation
+        self._write(_BMP280_REGISTER_CONTROL, (os_mode << 5) + (os_mode << 2) + self.power_mode)
+        self._write(_BMP280_REGISTER_CONFIG, (standby << 5) + (iir_mode << 2))
+
+    def force_measure(self):
+        """Force une mesure sur le capteur BMP280."""
+        self._write(_BMP280_REGISTER_CONTROL, (self.os_mode << 5) + (self.os_mode << 2) + BMP280_POWER_FORCED)
+
+    def update_sensor(self):
+        """Met à jour les données de température et de pression."""
+        ts = time.ticks_ms()
+        if self._last_read_ts == 0 or time.ticks_diff(ts, self._last_read_ts) >= self._new_read_ms:
+            if self.power_mode == BMP280_POWER_FORCED:
+                self.force_measure()
+                time.sleep_ms(self.read_wait_ms)
+            self._gauge()
+            self._last_read_ts = ts
+
+# Configuration I2C pour Raspberry Pi Pico
+i2c = I2C(0, scl=Pin(21), sda=Pin(20))  # Ajustez les broches SCL et SDA si nécessaire
+
+# Scannez les périphériques I2C pour détecter l'adresse du BMP280
+devices = i2c.scan()
+
+if not devices:
+    raise Exception("Aucun périphérique I2C trouvé. Vérifiez les connexions.")
+
+if _BMP280_ADDRESS_76 in devices:
+    bmp_addr = _BMP280_ADDRESS_76
+elif _BMP280_ADDRESS_77 in devices:
+    bmp_addr = _BMP280_ADDRESS_77
+else:
+    raise Exception("BMP280 non détecté. Vérifiez l'adresse et les connexions.")
+
+# Initialisation du capteur BMP280
+bmp = BMP280(i2c, addr=bmp_addr)
+
+# Fonction de test pour lire la température et la pression
+def test_bmp280():
     while True:
-        if time.ticks_ms()-last_flush > 1000: # Flush every seconds
-            f.flush()
-            last_flush = time.ticks_ms()
-        
-        try:
-            line = buffer.popleft() # Try to fetch one line
-        except IndexError:
-            time.sleep(0.01)
-            continue
-        
-        if type(line) == str:
-            if not line.endswith("\n"): line += "\n"
-            f.write(line)
-        elif type(line) == tuple:
-            f.write("|".join([str(value) for value in line])+"\n")
-        
-def write_color(color):
-    led[0] = color
-    led.write()
+        bmp.update_sensor()
+        temperature = bmp.temperature
+        pressure = bmp.pressure
+        print("Température : {:.2f} °C".format(temperature))
+        print("Pression : {:.2f} hPa".format(pressure / 100))  # conversion de Pa en hPa
+        time.sleep(2)  # Attendre 2 secondes avant la prochaine lecture
 
-buzz.on()
-time.sleep(0.1)
-buzz.off()
+test_bmp280()
 
-bmp_last_measure_ticks = 0
-sea_level_pressure = 0
-def get_bmp_data():
-    global bmp_last_measure_ticks, sea_level_pressure
-    time.sleep_ms(max(0, 1 + bmp_refresh_period-(time.ticks_ms()-bmp_last_measure_ticks))) # Ensure "bmp_refresh_period" is waited between measurements
+def actual_pressure():
+    bmp.update_sensor()
+    pressure=bmp.pressure
+    time.sleep(2)
+    return pressure
 
-    while True:
-        bmp_last_measure_ticks = time.ticks_ms()
-        try:
-            pressure, temperature = bmp.pressure, bmp.temperature
-        except OSError:
-            time.sleep_ms(bmp_refresh_period)
-            continue
-        
-        if pressure > 71300: # Workaround first measurement glitch
-            break
-        else:
-            time.sleep_ms(bmp_refresh_period)
-    
-    if sea_level_pressure == 0: sea_level_pressure = pressure # Set reference pressure
-    
-    altitude = 44330 * (1.0 - pow(pressure / sea_level_pressure, 0.1903))
-    return bmp_last_measure_ticks, altitude, pressure, temperature
-    
-def deploy():
-    global ticks_deployed, status
-    if time.ticks_ms() - ticks_launched > min_delay and status != STATUS_DEPLOYED: # If time elapsed since launch is greather than min_delay
-        servo.duty_ns(servo_open)
-        status = STATUS_DEPLOYED
-        ticks_deployed = time.ticks_ms()
-        schedule(log_buffer.append, f"{ticks_deployed}|{FRAME_LOG}|DEPLOYED\n")
-        write_color(COLOR_WHITE)
-    else:
-        schedule(log_buffer.append, f"{time.ticks_ms()}|{FRAME_LOG}|INVALID DEPLOY ORDER")
-        
-def deploy_callback(t):
-    deploy()
-    schedule(log_buffer.append, f"{time.ticks_ms()}|{FRAME_LOG}|DEPLOYED BY TIMER")
-    
-def avg_speed(altitude_buffer):
-    speeds = list()
-    for i in range(len(altitude_buffer)-1):
-        speeds.append((altitude_buffer[i+1][1] - altitude_buffer[i][1]) / ((altitude_buffer[i+1][0] - altitude_buffer[i][0])/1_000))
-    return sum(speeds)/len(speeds)
 
-# ##### MAIN PROGRAM ######
-_thread.start_new_thread(flush_logs, (log_buffer,))
+#definition 
+pressure_actual=0
+liste_actual_pressure=[]
+iterator_liste=0
+liste_variation=[]
 
-# FORCE DEPLOYEMENT
-write_color(COLOR_GREEN)
 
-time.sleep(2)
+#Allumage de la led en vert
 
-if rp2.bootsel_button():
-    servo.duty_ns(servo_open)
-    log_buffer.append(f"{time.ticks_ms()}|{FRAME_LOG}|FORCED DEPLOYMENT")
-    while True:
-        write_color(COLOR_BLACK)
-        time.sleep(0.8)
-        write_color(COLOR_WHITE)
-        time.sleep(0.1)
+#Son 1
 
-write_color(COLOR_RED)
+#Clignotement en vert et rouge
 
-# LAUNCH DETECTION
-last_log_ticks = 0
-while status == STATUS_STANDBY: # While waiting for LAUNCH
-    timestamp, altitude, pressure, temperature = get_bmp_data()
-    measure_buffer.append((timestamp, FRAME_BMP, altitude, pressure, temperature)) # Log into circular buffer
-    
-    if altitude > altitude_treshold: # Detect launch
-        log_buffer.append(f"{timestamp}|{FRAME_LOG}|LAUNCHED")
-        ticks_launched = timestamp
-        status = STATUS_LAUNCHED
-        timer = Timer(period=max_delay, mode=Timer.ONE_SHOT, callback=deploy_callback) # Start backup timer
-        
-        break
-    
-    elif timestamp - last_log_ticks > 500: # Log baro every 500 ms even if not launched
-        log_buffer.append((timestamp, FRAME_BMP, altitude, pressure, temperature))
-        last_log_ticks = timestamp
-    
-    if (time.ticks_ms()%100) < 50: # Blink led
-        write_color(COLOR_GREEN)
-    else:
-        write_color(COLOR_RED)
-        
-    if (time.ticks_ms()%1_000) < 100:
-        buzz.on()
-    else:
-        buzz.off()
+# Son 2
 
-buzz.off()
-write_color(COLOR_BLUE)
+#Mesure depuis le BMP280
+pressure_actual=actual_pressure()
 
-while True: 
-    try:
-        log_buffer.append(measure_buffer.popleft()) # Log circular buffer
-    except IndexError:
-        break
+#Ajout de la mesure au tableau
+if iterator_liste<10:
+    liste_actual_pressure.append()
 
-del last_log_ticks, measure_buffer
+else:
+    iterator_liste=0
 
-altitude_buffer = list()
+#On trace une courbe a partir des valeurs du tableaux
+variations = [(liste_actual_pressure[i + 1] - liste_actual_pressure[i]) for i in range(len(liste_actual_pressure) - 1)]
+print(variations)
+time.sleep(10)
+liste_variation.append(variations)
 
-while status == STATUS_LAUNCHED: # While LAUNCHED not DEPLOYED
-    timestamp, altitude, pressure, temperature = get_bmp_data()
-    altitude_buffer.append((timestamp, altitude))
-    
-    if len(altitude_buffer) > 15: # Rolling average across 15 measurements (15*13 = 195 ms)
-        altitude_buffer.pop(0)
-    
-    log_buffer.append((timestamp, FRAME_BMP, altitude, pressure, temperature))
-    
-    if altitude > max_alt:
-        deploy()
-        log_buffer.append(f"{timestamp}|{FRAME_LOG}|FORCED DEPLOYMENT")
-        
-    
-    if len(altitude_buffer) > 2:
-        speed = avg_speed(altitude_buffer)
-        log_buffer.append(f"{timestamp}|{FRAME_SPEED}|{speed}")
-        if speed < speed_treshold:
-            deploy()
-            log_buffer.append(f"{timestamp}|{FRAME_LOG}|DEPLOYED BY ALTI")
+#on dérive la courbe
 
-while status == STATUS_DEPLOYED or time.ticks_ms()-ticks_touchdown < timeout: # Waiting for timeout ms after TOUCHDOWN
-    timestamp, altitude, pressure, temperature = get_bmp_data()
-    log_buffer.append((timestamp, FRAME_BMP, altitude, pressure, temperature))
-    if status == STATUS_DEPLOYED and altitude < altitude_treshold:
-        status = STATUS_TOUCHDOWN
-        ticks_touchdown = time.ticks_ms()
-        log_buffer.append(f"{timestamp}|{FRAME_LOG}|TOUCHDOWN")
 
-while True:
-    buzz.on()
-    time.sleep(0.1)
-    buzz.off()
-    time.sleep(0.4)
+#Tableau de variation pour savoir Etat 
+
+#détection de décollage 
+
+
     
