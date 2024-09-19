@@ -8,9 +8,9 @@ from utime import sleep
 from micropyGPS import MicropyGPS  # https://github.com/inmcm/micropyGPS
 
 def sdtest():
-    spi = SPI(1,baudrate = 10000,polarity=1,phase=0,mosi=Pin(11),sck=Pin(10),miso=Pin(12))
+    spi = SPI(0,baudrate = 10000,polarity=1,phase=0,mosi=Pin(3),sck=Pin(2),miso=Pin(4))
     spi.init()  # Ensure right baudrate
-    sd = sdcard.SDCard(spi, Pin(13))  # Compatible with PCB
+    sd = sdcard.SDCard(spi, Pin(5))  # Compatible with PCB
     vfs = os.VfsFat(sd)
     os.mount(vfs, "/fc")
     print("Filesystem check")
@@ -67,11 +67,11 @@ def sdtest():
 # ! à fair
 if __name__ == "__main__":
     # I2C pin ICM20948 
-    i2c = I2C(0, sda=Pin(0), scl=Pin(1)) # SDA : GPIO0 ; SCL : GPIO1
+    i2c = I2C(1, sda=Pin(6), scl=Pin(7)) # SDA : GPIO0 ; SCL : GPIO1
     sen = ICM20948AccGyr(i2c)
     sen.to_sleep()
     print(sen.icm.sleep)
-    sen.to_awake()
+    sen.wake_up()
     print(sen.icm.sleep)
 
     accxInit, accyInit, acczInit = sen.icm.acceleration
@@ -86,11 +86,11 @@ if __name__ == "__main__":
     
     print("pass ICM20948")
 
-    sdtest() # CS : GPIO10 ; mosi : GPIO11,SCK : GPIO10,miso : GPIO12 
+    sdtest() # CS : GPIO5 ; mosi : GPIO3,SCK : GPIO2,miso : GPIO4 
 
     uart= UART(1,baudrate=9600)  # initialisation UART 1 # TX : GPIO4 ; RX : GPIO 5 
     gps = MicropyGPS() # création d'un objet GPS
-
+    
     if uart.any():  
         donnees_brutes = str(uart.readline())
         for x in donnees_brutes:

@@ -12,15 +12,15 @@ if __name__ == "__main__":
     timeWaitBoucl:float=0.001
 
     sd = SDOignon(
-        1,
-        Pin(10),
-        Pin(11),
-        Pin(12),
-        Pin(13),
-        "data.txt",
+        0,
+        Pin(2),
+        Pin(3),
+        Pin(4),
+        Pin(5),
+        "data",
     )
 
-    i2c = I2C(0, sda=Pin(0), scl=Pin(1))
+    i2c = I2C(1, sda=Pin(6), scl=Pin(7))
     senAccGyr = ICM20948AccGyr(i2c)
     
     gp = GPSdata(1)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
             print("allumer")
             senAccGyr.wake_up()
             gp.wake_up()
-            # sleep ?
+            # pas sleep lora si on envoie pas 
         
         #? quand boucle on 
         while mainModuleOn:

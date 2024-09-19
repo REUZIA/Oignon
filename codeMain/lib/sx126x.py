@@ -24,7 +24,7 @@ if implementation.name == 'circuitpython':
     def sleep_us(us):
         sleep(us/1000000)
 
-    def ticks_ms():
+    def ticks_ms(): 
         return (monotonic_ns() // _MS_PER_NS) & _TICKS_MAX
 
     def ticks_us():

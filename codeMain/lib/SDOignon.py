@@ -55,9 +55,9 @@ class SDOignon:
             baudrate=10000,
             polarity=1,
             phase=0,
-            mosi=pinMiso,
+            mosi=pinMosi,#
             sck=pinSck,
-            miso=pinMosi,
+            miso=pinMiso,
         )
 
         self.spi.init()
@@ -110,8 +110,8 @@ if __name__ == "__main__":
     sd = SDOignon(
         1,
         machine.Pin(10),
-        machine.Pin(11),
         machine.Pin(12),
+        machine.Pin(11),
         machine.Pin(13),
         "data",
     )
