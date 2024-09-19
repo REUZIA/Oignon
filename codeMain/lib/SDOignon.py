@@ -55,7 +55,7 @@ class SDOignon:
             baudrate=10000,
             polarity=1,
             phase=0,
-            mosi=pinMosi,#
+            mosi=pinMosi,
             sck=pinSck,
             miso=pinMiso,
         )

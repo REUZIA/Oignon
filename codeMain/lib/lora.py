@@ -31,16 +31,15 @@ class LoRaTransceiver:
     ):
         self.sx = SX1262(
             spi_bus=spi_bus,
-            clk=clk,
+            clk=clk,#sck
             mosi=mosi,
             miso=miso,
             cs=cs,
-            irq=irq,
-            rst=rst,
-            gpio=gpio,
+            irq=irq,#DIO1
+            rst=rst,#Rest
+            gpio=gpio,#BUSY
         )
         self.received_data = None
-
     def callback(self, events):
         if events & SX1262.RX_DONE:
             self.received_data, err = self.sx.recv()
