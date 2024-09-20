@@ -19,7 +19,7 @@ class GPSdata:
     
     def to_sleep(self)->None:
         pass
-    def wake_up(self)->None:
+    def to_awake(self)->None:
         pass
 
     def __str__(self) -> str:

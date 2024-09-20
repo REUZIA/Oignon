@@ -19,7 +19,7 @@ class ICM20948AccGyr:
     def to_sleep(self) -> None:
         self.icm.sleep = icm20948.SLEEP_ENABLED
 
-    def wake_up(self) -> None:
+    def to_awake(self) -> None:
         self.icm.sleep = icm20948.SLEEP_DISABLED
 
     @property
@@ -37,7 +37,8 @@ class ICM20948AccGyr:
 
 if __name__ == "__main__":
     # # I2C pin ICM20948
-    i2c = I2C(0, sda=Pin(0), scl=Pin(1))
+    # i2c = I2C(0, sda=Pin(0), scl=Pin(1))
+    i2c = I2C(1, sda=Pin(6), scl=Pin(7))
     sen = ICM20948AccGyr(i2c)
     sen.to_sleep()
     print(sen.icm.sleep)

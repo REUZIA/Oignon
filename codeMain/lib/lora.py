@@ -21,13 +21,13 @@ class LoRaTransceiver:
     def __init__(
         self,
         spi_bus=1,
-        clk=10,
+        clk=10,#sck
         mosi=11,
         miso=12,
         cs=3,
-        irq=20,
-        rst=15,
-        gpio=2,
+        irq=20,#DIO1
+        rst=15,#Rest
+        gpio=2,#BUSY
     ):
         self.sx = SX1262(
             spi_bus=spi_bus,

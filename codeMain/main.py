@@ -28,19 +28,32 @@ if __name__ == "__main__":
 
     lora = LoRaTransceiver(
         spi_bus=0,
-        clk=26,
-        mosi=27,
-        miso=12,
-        cs=19,
+        clk=18,
+        mosi=19,
+        miso=16,
+        cs=27,
         irq=20,
         rst=15,
-        gpio=20,
+        gpio=26,
     )
-    lora.setup(864)
+
+    # lora = LoRaTransceiver(
+    #     spi_bus=0,
+    #     clk=26,
+    #     mosi=27,
+    #     miso=12,#16
+    #     cs=19,
+    #     irq=20,
+    #     rst=15,
+    #     gpio=20,
+    # )
+    lora.setup(863)
+
+    lora.send("oui")
 
     # ? maitre le composant en sleep mode
-    senAccGyr.to_sleep()
-    gp.to_sleep()
+    senAccGyr.to_awake()
+    gp.to_awake()
 
     print("start")
     # while True:
