@@ -1,6 +1,5 @@
 from lib.sx1262 import SX1262
 import time
-import threading
 import uselect
 import sys
 
