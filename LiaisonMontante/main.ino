@@ -58,7 +58,7 @@ void loop() {
 
     if (str == "SIG1"){
       digitalWrite(SIG1, HIGH);
-    }else if (st == "SIG2"){
+    }else if (str == "SIG2"){
       digitalWrite(SIG2, HIGH);
     }
   } else if (state == RADIOLIB_ERR_RX_TIMEOUT) {
