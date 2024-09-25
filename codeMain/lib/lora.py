@@ -83,7 +83,16 @@ class LoRaTransceiver:
 
 
 if __name__ == "__main__":
-    lora = LoRaTransceiver()
+    lora = LoRaTransceiver(
+        spi_bus = 0,
+        clk = 18,
+        mosi = 19,
+        miso = 16,
+        cs = 27,
+        irq = 20,
+        rst = 15,
+        gpio = 26,
+    )
     lora.setup(869.75)
 
     while True:
