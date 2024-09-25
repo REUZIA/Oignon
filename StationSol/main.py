@@ -22,7 +22,7 @@ freqRX = 869.75
 freqTX = 863.75
 
 def cbRX(events): #callback function when RX event occurs
-    if events & SX1262.RX_DONE: #we make sure the 
+    if events & SX1262.RX_DONE: #we make sure the transmission is done before reading it
         msg, err = sxRX.recv()
         error = SX1262.STATUS[err]
         print(msg)
@@ -50,7 +50,7 @@ spoll=uselect.poll()
 spoll.register(sys.stdin,uselect.POLLIN)
 
 send_data = ""
-send_char = "#" #char used to tell the module to send the data
+send_char = "#" #char used to end line and send data
 
 # main loop
 while True:
