@@ -21,21 +21,30 @@ int SIG2 = 18;
 
 int freq = 863.75;
 
+int actdelay = 10; //number of loops for the activation of a pin, each loop lasts between 5 and 10ms
+int Sig1On = 0;
+int Sig2On = 0;
+
 SX1262 radio = new Module(CS, DIO1, RESET, BUSY);
 
 void setup() {
   Serial.begin(9600);
-
+  bool fail = false;
   // initialize SX1262 with default settings
-  Serial.print(F("Initializing ... "));
-  int state = radio.begin(freq);
-  if (state == RADIOLIB_ERR_NONE) {
-    Serial.println(F("success!"));
-  } else {
-    Serial.print(F("failed, code "));
-    Serial.println(state);
-    while (true) { delay(10); }
+  do{
+    Serial.print(F("Initializing ... "));
+    int state = radio.begin(freq);
+    if (state == RADIOLIB_ERR_NONE) {
+      Serial.println(F("success!"));
+      fail = false;
+    } else {
+      Serial.print(F("failed, code "));
+      Serial.println(state);
+      Serial.println("trying again...");
+      fail = true;
+    }
   }
+  while (fail);  
 
   pinMode(SIG1, OUTPUT);
   pinMode(SIG2, OUTPUT);
@@ -57,9 +66,15 @@ void loop() {
     Serial.println(str);
 
     if (str == "SIG1"){
-      digitalWrite(SIG1, HIGH);
+      if (Sig1On == 0){
+        digitalWrite(SIG1, HIGH);
+        Sig1On += 1;
+      }
     }else if (str == "SIG2"){
-      digitalWrite(SIG2, HIGH);
+      if (Sig2On == 0){
+        digitalWrite(SIG2, HIGH);
+        Sig2On += 1;
+      }
     }
   } else if (state == RADIOLIB_ERR_RX_TIMEOUT) {
     // timeout occurred while waiting for a packet
@@ -74,5 +89,19 @@ void loop() {
     Serial.print(F("failed, code "));
     Serial.println(state);
 
+  }
+  if (Sig1On > 0){
+    if Sig1On = actdelay{
+      digitalWrite(SIG1, LOW);
+    }else{
+      Sig1On += 1;
+    }
+  }
+  if (Sig2On > 0){
+    if Sig2On = actdelay{
+      digitalWrite(SIG2, LOW);
+    }else{
+      Sig2On += 1;
+    }
   }
 }
