@@ -29,7 +29,7 @@
 #                     print('Satellites in use:', my_gps.satellites_in_use)
 #                     print('Horizontal Dilution of Precision:', my_gps.hdop)
 #                     print()
-#             sleep(0.1)
+#             sleep(1)
 #     except Exception as e:
 #         print(f"An error occurred: {e}")
 # # ?48.85603,22.68779
@@ -126,3 +126,27 @@ $$GPRMC,173310.00,V,,,$GPRMC,173311.00,V,,,,,,,240924,,,N*72
 ---
 recupe tout lire gps 
 """
+
+# import machine
+# from utime import sleep
+# from micropyGPS import MicropyGPS  # https://github.com/inmcm/micropyGPS
+
+# uart= machine.UART(1,baudrate=9600)  # initialisation UART
+# gps = MicropyGPS() # création d'un objet GPS
+
+# while True:
+#     if uart.any():  # si nous avons reçu quelque chose...
+#         donnees_brutes = str(uart.readline())
+#         for x in donnees_brutes:
+#             gps.update(x)
+
+#         print('Latitude: ' ,gps.latitude_string())
+#         print('Latitude (tuple): ' , gps.latitude)
+#         print('Longitude: ' ,gps.longitude_string())
+#         print('Longitude (tuple): ' , gps.longitude)
+#         print('Altitude: ' , gps.altitude)
+#         print('Vitesse: ', gps.speed_string('kph'))
+#         print('Date: ' , gps.date_string('s_dmy'))
+#         print('')
+
+#     sleep(.1)

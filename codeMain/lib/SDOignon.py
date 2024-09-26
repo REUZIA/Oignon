@@ -76,6 +76,8 @@ class SDOignon:
             miso=machine.Pin(pinMiso),
         )
 
+        self.lock = allocate_lock()  # Créer un verrou
+
         self.spi.init()
 
         self.sd = sdcard.SDCard(self.spi, machine.Pin(pinSC))  # Compatible with PCB
@@ -87,9 +89,8 @@ class SDOignon:
 
         print("Filesystem check")
         print(os.listdir("/fc"))
-        self.add(colmSvg)
+        self.write(colmSvg)
 
-        self.lock = allocate_lock()  # Créer un verrou
 
 
     def is_sd_mounted(self):
@@ -141,6 +142,6 @@ if __name__ == "__main__":
         colmSvg = ""
     )
 
-    sd.add("oui")
+    sd.write("oui")
     print(sd.read())
     sd.umount()

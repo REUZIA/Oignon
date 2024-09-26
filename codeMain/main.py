@@ -98,5 +98,6 @@ if __name__ == "__main__":
             #? detecter si off
             if not mainModuleOn:# on etteint les modules
                 print("eteindre")
+                mainModuleOn=0
                 senAccGyr.to_sleep()
                 gp.to_sleep()

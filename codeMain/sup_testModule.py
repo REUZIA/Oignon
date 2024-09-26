@@ -68,6 +68,8 @@ def sdtest():
     print("Tests", "passed" if success else "failed")
 
 # ! à fair
+
+
 if __name__ == "__main__":
     # ? I2C pin ICM20948 
     i2c = I2C(1, sda=Pin(6), scl=Pin(7)) # SDA : GPIO0 ; SCL : GPIO1
@@ -89,8 +91,9 @@ if __name__ == "__main__":
     
     print("pass ICM20948")
 
+    sdtest()
 
-    uart= UART(1,baudrate=9600, tx=Pin(4), rx=Pin(5), timeout=5000, timeout_char=5000)  # initialisation UART 1 # TX : GPIO4 ; RX : GPIO 5 
+    uart= UART(1,baudrate=9600, tx=Pin(8), rx=Pin(9), timeout=5000, timeout_char=5000)  # initialisation UART 1 # TX : GPIO4 ; RX : GPIO 5 
     gps = MicropyGPS() # création d'un objet GPS
     
     if uart.any():  
@@ -113,15 +116,16 @@ if __name__ == "__main__":
     # ? lora
     print("start lora  ok")
     lora = LoRaTransceiver(
-        spi_bus=0,
-        clk=18,
-        mosi=19,
-        miso=16,
-        cs=27,
-        irq=20,
-        rst=15,
-        gpio=26,
+        spi_bus = 0,
+        clk = 18,
+        mosi = 19,
+        miso = 16,
+        cs = 27,
+        irq = 20,
+        rst = 15,
+        gpio = 26,
     )
+    lora.setup(869.75)
     """
     ensie pine avec modif carte au ca ou
         lora = LoRaTransceiver(
@@ -135,7 +139,6 @@ if __name__ == "__main__":
             gpio=20,
         )
     """
-    lora.setup(863)
 
     lora.send("oui")
     print("lora ok")

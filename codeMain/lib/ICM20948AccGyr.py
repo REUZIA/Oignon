@@ -41,12 +41,11 @@ class ICM20948AccGyr:
         # Renvoie les valeurs de rotation (x, y, z) en degrés par seconde
         return self.icm.gyro
 
-    def __str__(self) -> str:
+    def __str__(self):
         # Renvoie quand str du l'object une chaîne de caractères représentant les valeurs d'accélération et de rotation
         accx, accy, accz = self.acceleration
         gyrox, gyroy, gyroz = self.gyro
-        return f"{accx:.self.2f}:{accy:.2f}:{accz:.2f};{gyrox:.2f}:{gyroy:.2f}:{gyroz:.2f}"
-
+        return f"{accx:.2f}:{accy:.2f}:{accz:.2f};{gyrox:.2f}:{gyroy:.2f}:{gyroz:.2f}"
 
 if __name__ == "__main__":
     #init
@@ -63,10 +62,11 @@ if __name__ == "__main__":
 
     # affiche valeur
     while True:
-        accx, accy, accz = sen.icm.acceleration
-        gyrox, gyroy, gyroz = sen.icm.gyro
-        print(f"x: {accx:.2f}m/s2, y: {accy:.2f}m/s2, z: {accz:.2f}m/s2")
-        print("x:{:.2f}deg/s, y:{:.2f}deg/s, z:{:.2f}deg/s".format(gyrox, gyroy, gyroz))
+        # accx, accy, accz = sen.icm.acceleration
+        # gyrox, gyroy, gyroz = sen.icm.gyro
+        # print(f"x: {accx:.2f}m/s2, y: {accy:.2f}m/s2, z: {accz:.2f}m/s2")
+        # print("x:{:.2f}deg/s, y:{:.2f}deg/s, z:{:.2f}deg/s".format(gyrox, gyroy, gyroz))
+        print(sen)
 
         print()
         time.sleep(1)
