@@ -63,9 +63,16 @@ class GPSdata:
             return 0
 
     def to_sleep(self) -> None:
+        # Commande UBX pour activer le Power Save Mode
+        #psm_command = b'\xB5\x62\x06\x11\x02\x00\x08\x01\x20\x97'
+        #self.uart.write(psm_command)
+
         pass
 
     def wake_up(self) -> None:
+        # Commande UBX pour activer l'upload en 5Hz
+        #max_perf_command = b'\xB5\x62\x06\x08\x24\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x00'
+        #self.uart.write(max_perf_command)
         pass
 
     def __str__(self) -> str:
