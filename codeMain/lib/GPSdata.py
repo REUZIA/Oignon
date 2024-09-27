@@ -1,3 +1,4 @@
+import mycropython
 import machine
 import time
 from micropyGPS import MicropyGPS  # https://github.com/inmcm/micropyGPS
