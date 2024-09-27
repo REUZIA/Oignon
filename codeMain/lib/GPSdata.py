@@ -5,7 +5,7 @@ from micropyGPS import MicropyGPS  # https://github.com/inmcm/micropyGPS
 
 class GPSdata:
     def __init__(
-        self, uartPin, baudRate=9600, tx=8, rx=9, timeout=5000, timeout_char=5000
+        self, uartPin, baudRate=9600, tx=8, rx=9, timeout=1000, timeout_char=1000
     ) -> None:
         self.uart = machine.UART(
             uartPin,
@@ -39,11 +39,20 @@ class GPSdata:
 
     def update(self) -> int:
         if self.uart.any():
-            donnees_brutes = str(self.uart.readline())  # fonction bloquante
-            for x in donnees_brutes:
-                self.gps.update(x)
-            return 1
-        return 0
+
+            donnees_brutes = self.uart.readline()  # fonction bloquante
+            if donnees_brutes is None :
+
+                return 0
+            else :
+
+                donnees_brutes = str(donnees_brutes)
+                for x in donnees_brutes:
+                    self.gps.update(x)
+                return 1
+        else :
+
+            return 0
 
     def to_sleep(self) -> None:
         pass
@@ -75,9 +84,11 @@ class GPSdata:
             minute: str = str(self.gps.timestamp[1])
             second: str = str(self.gps.timestamp[2])
             showhour: str = f"{hour}:{minute}:{second}"  # self.gps.gprmc()
+
             return f"{lati};{longi};{alti};{satelieNBinUse};{satelieNBvisible};{speed};{showhour}"
             # latitude;longitude;altitude;nombre_satellite_utiliser;nombre_satellite_visible;vitesse;heure
-        return "00;00;00;00;00;00;00"
+        else :
+            return "00;00;00;00;00;00;00"
 
 
 if __name__ == "__main__":
