@@ -17,6 +17,13 @@ class GPSdata:
         )  # initialisation UART
         self.gps = MicropyGPS()  # création d'un objet GPS
 
+    def schedule_update(self, arg):
+        #Callback appelé périodiquement pour mettre à jour les données GPS.
+        self.update()
+        # Reprogrammer l'exécution pour la prochaine mise à jour
+        micropython.schedule(self.schedule_update, 0)
+
+
     def convert_to_dms(self, coords: list) -> str:
         """_summary_
 
@@ -93,6 +100,7 @@ class GPSdata:
 
 if __name__ == "__main__":
     gp = GPSdata(1, rx=9, tx=8)
+    mycropython.schedule(gp.schedule_update, 0)
     while True:
         print(gp)
         time.sleep(0.5)
