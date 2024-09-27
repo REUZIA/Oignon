@@ -1,4 +1,4 @@
-import mycropython
+import micropython
 import machine
 import time
 from micropyGPS import MicropyGPS  # https://github.com/inmcm/micropyGPS
@@ -6,7 +6,7 @@ from micropyGPS import MicropyGPS  # https://github.com/inmcm/micropyGPS
 
 class GPSdata:
     def __init__(
-        self, uartPin, baudRate=9600, tx=8, rx=9, timeout=1000, timeout_char=1000
+        self, uartPin, baudRate=9600, tx=8, rx=9, timeout=200, timeout_char=200
     ) -> None:
         self.uart = machine.UART(
             uartPin,
@@ -50,7 +50,7 @@ class GPSdata:
 
             donnees_brutes = self.uart.readline()  # fonction bloquante
             if donnees_brutes is None :
-
+                print("c non")
                 return 0
             else :
 
@@ -59,21 +59,21 @@ class GPSdata:
                     self.gps.update(x)
                 return 1
         else :
+            print("c else")
 
             return 0
 
     def to_sleep(self) -> None:
         # Commande UBX pour activer le Power Save Mode
-        #psm_command = b'\xB5\x62\x06\x11\x02\x00\x08\x01\x20\x97'
-        #self.uart.write(psm_command)
-
-        pass
+        psm_command = b'\xB5\x62\x06\x11\x02\x00\x08\x01\x20\x97'
+        self.uart.write(psm_command)
+        #pass
 
     def wake_up(self) -> None:
         # Commande UBX pour activer l'upload en 5Hz
-        #max_perf_command = b'\xB5\x62\x06\x08\x24\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x00'
-        #self.uart.write(max_perf_command)
-        pass
+        max_perf_command = b'\xB5\x62\x06\x08\x24\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x00'
+        self.uart.write(max_perf_command)
+        #pass
 
     def __str__(self) -> str:
         """renvoie donner gps après actualisation 
@@ -101,33 +101,34 @@ class GPSdata:
             showhour: str = f"{hour}:{minute}:{second}"  # self.gps.gprmc()
 
             return f"{lati};{longi};{alti};{satelieNBinUse};{satelieNBvisible};{speed};{showhour}"
-            # latitude;longitude;altitude;nombre_satellite_utiliser;nombre_satellite_visible;vitesse;heure
-        else :
-            return "00;00;00;00;00;00;00"
+            # latitude;longitude;altitude;nombre_satellite_utiliser;nombre_satellite_visible;vitesse;heure        
+        return "00;00;00;00;00;00;00"
 
 
 if __name__ == "__main__":
+    i = 0
     gp = GPSdata(1, rx=9, tx=8)
-    mycropython.schedule(gp.schedule_update, 0)
+    #micropython.schedule(gp.schedule_update, 0)
+    gp.wake_up()
     while True:
-        print(gp)
-        time.sleep(0.5)
+        print(f"[{i}] {gp}" )
+        time.sleep(0.2)
+        i+=1
 
-"""
-# tester uart 
-import machine
-from time import sleep
 
-# Define the UART pins and create a UART object
-gps_serial = machine.UART(1, baudrate=9600, tx=8, rx=9)
+# # tester uart 
+# import machine
+# from time import sleep
 
-while True:
-    if gps_serial.any():
-        line = gps_serial.readline()  # Read a complete line from the UART
-        if line:
-            line = line.decode('utf-8')
-            print(line.strip())
-    else:
-        print("r")
-    sleep(1)
-"""
+# # Define the UART pins and create a UART object
+# gps_serial = machine.UART(1, baudrate=9600, tx=8, rx=9)
+
+# while True:
+#     if gps_serial.any():
+#         line = gps_serial.readline()  # Read a complete line from the UART
+#         if line:
+#             line = line.decode('utf-8')
+#             print(line.strip())
+#     else:
+#         print("r")
+#     sleep(1)
