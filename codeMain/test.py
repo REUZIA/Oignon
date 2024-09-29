@@ -111,13 +111,3 @@ def reset_lora(sx):
     """ Function to reset the LoRa module """
     sx.reset()
     CS_LORA.value(1)  # Set CS to high to deactivate LoRa
-
-if __name__ == "__main__":
-    try:
-        # Initialize LoRa
-        sx = init_lora()
-        # Run SD card test
-        sdtest()
-    finally:
-        # Reset LoRa module before exit
-        reset_lora(sx)
