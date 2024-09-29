@@ -1,6 +1,6 @@
 from machine import I2C, Pin
 
-i2c =  I2C(0, sda=Pin(0), scl=Pin(1)) 
+i2c = I2C(1, sda=Pin(6), scl=Pin(7))
 
 # Ensuite, scanner les périphériques I2C
 devices = i2c.scan()
