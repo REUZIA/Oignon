@@ -15,6 +15,8 @@ https://github.com/ehong-tl/micropySX126X?tab=readme-ov-file
 
 from sx1262 import SX1262
 import time
+from machine import Pin, SPI
+
 
 
 class LoRaTransceiver:
@@ -83,15 +85,20 @@ class LoRaTransceiver:
 
 
 if __name__ == "__main__":
+    CS_LORA = Pin(27, Pin.OUT)
+    CS_SD = Pin(5, Pin.OUT)
+    CS_LORA.value(0)  # LoRa active
+    CS_SD.value(1)    # SD inacte
+
     lora = LoRaTransceiver(
         spi_bus = 0,
         clk = 18,
         mosi = 19,
         miso = 16,
         cs = 27,
-        irq = 20,
-        rst = 15,
-        gpio = 26,
+        irq = 20,#DIO1
+        rst = 15,#reset
+        gpio = 26,#busy
     )
     lora.setup(869.75)
 

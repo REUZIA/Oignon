@@ -29,21 +29,21 @@ if __name__ == "__main__":
 
 
     # ! LORA
-    lora = LoRaTransceiver(
-        spi_bus = 0,
-        clk = 18,
-        mosi = 19,
-        miso = 16,
-        cs = 27,
-        irq = 20,
-        rst = 15,
-        gpio = 26,
-    )
-    lora.setup(869.75)
+    # lora = LoRaTransceiver(
+    #     spi_bus = 0,
+    #     clk = 18,
+    #     mosi = 19,
+    #     miso = 16,
+    #     cs = 27,
+    #     irq = 20,
+    #     rst = 15,
+    #     gpio = 26,
+    # )
+    # lora.setup(869.75)
 
     # ! test solo SD 
     for _ in range(10):
-        sd.add("1:2:3;4:5:6s")
+        sd.write("1:2:3;4:5:6s")
         time.sleep(0.1)
 
     # ! test solo ICM    
@@ -52,14 +52,14 @@ if __name__ == "__main__":
         time.sleep(0.1)
 
     # ! test solo GPS 
-    for _ in range(10):
-        print(GPSdata)
+    for _ in range(3):
+        print(gp)
         time.sleep(1)
 
     # ! test solo LORA
-    line = "abcdefghijklmnopqrstuvwxyz\n"
-    for _ in range(10):
-        lora.send(line)
-        time.sleep(0.1)
+    # line = "abcdefghijklmnopqrstuvwxyz\n"
+    # for _ in range(10):
+    #     lora.send(line)
+    #     time.sleep(0.1)
 
     
