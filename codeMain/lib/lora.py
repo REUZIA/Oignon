@@ -42,6 +42,7 @@ class LoRaTransceiver:
             gpio=gpio,#BUSY
         )
         self.received_data = None
+
     def callback(self, events):
         if events & SX1262.RX_DONE:
             self.received_data, err = self.sx.recv()
@@ -50,15 +51,15 @@ class LoRaTransceiver:
         elif events & SX1262.TX_DONE:
             print("TX done.")
 
-    def setup(self,freq:float) -> None:
+    def setup(self,freq:float,bw:float=500,sf=12,cr=8,syncWork=0x34,power=2) -> None:
         # LoRa
         self.sx.begin(
-            freq=freq,
-            bw=500.0,
-            sf=12,
-            cr=8,
-            syncWord=0x12,
-            power=-5,
+            freq=freq,#869.75
+            bw=bw,
+            sf=sf,
+            cr=cr,
+            syncWord=syncWork,
+            power=power,
             currentLimit=60.0,
             preambleLength=8,
             implicit=False,
@@ -66,7 +67,6 @@ class LoRaTransceiver:
             crcOn=True,
             txIq=False,
             rxIq=False,
-            tcxoVoltage=1.7,
             useRegulatorLDO=False,
             blocking=True,
         )
@@ -74,7 +74,7 @@ class LoRaTransceiver:
         self.sx.setBlockingCallback(False, self.callback)
 
     def send(self, text: str) -> None:
-        self.sx.send(b"{text}")
+        print("byte :",self.sx.send(text.encode()))
 
     def recive(self) -> str:
         res = ""
@@ -100,8 +100,14 @@ if __name__ == "__main__":
         rst = 15,#reset
         gpio = 26,#busy
     )
-    lora.setup(869.75)
-
-    while True:
-        lora.send("Ping")
-        time.sleep(10)
+    # lora.setup(869.75,bw=500)
+    lora.setup(869.75,sf=6,cr=5)
+    print("end init")
+    # while True:
+    for _ in range(100):
+        print("send")
+        # lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
+        
+        lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
+        # lora.send(f"-0.07:{10**_}")
+        time.sleep(1)
