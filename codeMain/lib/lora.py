@@ -101,10 +101,11 @@ if __name__ == "__main__":
         gpio = 26,#busy
     )
     # lora.setup(869.75,bw=500)
-    lora.setup(869.75,sf=6,cr=5)
+    # lora.setup(869.75,sf=6,cr=5)
+    lora.setup(923,sf=6,cr=5)
     print("end init")
     # while True:
-    for _ in range(100):
+    for _ in range(1):
         print("send")
         # lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
         

@@ -97,7 +97,7 @@ def soft_reset():
 def main():
     try:
         init_lora()
-        init_sd()
+        # init_sd()
 
         message = "Hello LoRa"
         for i in range(20):

@@ -56,3 +56,5 @@ sx.begin(freq=923, bw=125.0, sf=12, cr=8, syncWord=0x12,
 ##            blocking=True)
 
 sx.setBlockingCallback(False, cb)
+
+sx.send(b'Test message')
