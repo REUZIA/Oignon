@@ -51,7 +51,7 @@ class LoRaTransceiver:
         elif events & SX1262.TX_DONE:
             print("TX done.")
 
-    def setup(self,freq:float,bw:float=500,sf=12,cr=8,syncWork=0x34,power=2) -> None:
+    def setup(self,freq:float,bw:float=500,sf=12,cr=8,syncWork=0x34,power=14) -> None:
         # LoRa
         self.sx.begin(
             freq=freq,#869.75
@@ -85,10 +85,6 @@ class LoRaTransceiver:
 
 
 if __name__ == "__main__":
-    CS_LORA = Pin(27, Pin.OUT)
-    CS_SD = Pin(5, Pin.OUT)
-    CS_LORA.value(0)  # LoRa active
-    CS_SD.value(1)    # SD inacte
 
     lora = LoRaTransceiver(
         spi_bus = 0,
@@ -101,14 +97,13 @@ if __name__ == "__main__":
         gpio = 26,#busy
     )
     # lora.setup(869.75,bw=500)
-    # lora.setup(869.75,sf=6,cr=5)
-    lora.setup(923,sf=6,cr=5)
+    lora.setup(869.75,sf=6,cr=5)
     print("end init")
     # while True:
-    for _ in range(1):
+    for _ in range(100):
         print("send")
         # lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
         
         lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
         # lora.send(f"-0.07:{10**_}")
-        time.sleep(1)
+        time.sleep(0.1)

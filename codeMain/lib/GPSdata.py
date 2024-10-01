@@ -47,25 +47,14 @@ class GPSdata:
     def update(self) -> int:
         if self.uart.any():
             donnees_brutes = self.uart.readline()  # fonction bloquante
-<<<<<<< Updated upstream
-            if donnees_brutes is None :
-                print("c non")
-=======
             if donnees_brutes is None:
->>>>>>> Stashed changes
                 return 0
             else:
                 donnees_brutes = str(donnees_brutes)
                 for x in donnees_brutes:
                     self.gps.update(x)
                 return 1
-<<<<<<< Updated upstream
-        else :
-            print("c else")
-
-=======
         else:
->>>>>>> Stashed changes
             return 0
 
     def to_sleep(self) -> None:
@@ -106,14 +95,8 @@ class GPSdata:
             showhour: str = f"{hour}:{minute}:{second}"  # self.gps.gprmc()
 
             return f"{lati};{longi};{alti};{satelieNBinUse};{satelieNBvisible};{speed};{showhour}"
-<<<<<<< Updated upstream
             # latitude;longitude;altitude;nombre_satellite_utiliser;nombre_satellite_visible;vitesse;heure        
         return "00;00;00;00;00;00;00"
-=======
-            # latitude;longitude;altitude;nombre_satellite_utiliser;nombre_satellite_visible;vitesse;heure
-        else:
-            return "00;00;00;00;00;00;00"
->>>>>>> Stashed changes
 
 
 if __name__ == "__main__":
@@ -131,7 +114,6 @@ if __name__ == "__main__":
 # import machine
 # from time import sleep
 
-<<<<<<< Updated upstream
 # # Define the UART pins and create a UART object
 # gps_serial = machine.UART(1, baudrate=9600, tx=8, rx=9)
 
@@ -144,15 +126,3 @@ if __name__ == "__main__":
 #     else:
 #         print("r")
 #     sleep(1)
-=======
-while True:
-    if gps_serial.any():
-        line = gps_serial.readline()  # Read a complete line from the UART
-        if line:
-            line = line.decode('utf-8')
-            print(line.strip())
-    else:
-        print("r")
-    sleep(1)
-"""
->>>>>>> Stashed changes

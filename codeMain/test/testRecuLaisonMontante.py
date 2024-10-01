@@ -1,31 +1,3 @@
-# from sx1262 import SX1262
-# import time
-
-# def cb(events):
-#     if events & SX1262.RX_DONE:
-#         msg, err = sx.recv()
-#         error = SX1262.STATUS[err]
-#         print('Receive: {}, {}'.format(msg, error))
-#     elif events & SX1262.TX_DONE:
-#         print('TX done.')
-
-# # Reduce the SPI clock speed to 1 MHz
-# sx = SX1262(spi_bus=1, clk=10, mosi=11, miso=12, cs=3, irq=20, rst=15, gpio=2)
-
-# # LoRa
-# sx.begin(freq=915, bw=500.0, sf=12, cr=8, syncWord=0x12,
-#          power=-5, currentLimit=60.0, preambleLength=8,
-#          implicit=False, implicitLen=0xFF,
-#          crcOn=True, txIq=False, rxIq=False,
-#          tcxoVoltage=1.7, useRegulatorLDO=False, blocking=True)
-
-# sx.setBlockingCallback(False, cb)
-
-# while True:
-#     print("send")
-#     sx.send(b'Ping')
-#     time.sleep(10)
-
 
 from sx1262 import SX1262
 import time
@@ -40,8 +12,8 @@ def cb(events):
 sx = SX1262(spi_bus=0, clk=18, mosi=19, miso=16, cs=27, irq=20, rst=15, gpio=26)
 
 # LoRa
-sx.begin(freq=863.75, bw=125.0, sf=12, cr=8, syncWord=0x12,
-         power=-5, currentLimit=60.0, preambleLength=8,
+sx.begin(freq=863.75, bw=500, sf=12, cr=8, syncWord=0x34,
+         power=14, currentLimit=60.0, preambleLength=8,
          implicit=False, implicitLen=0xFF,
          crcOn=True, txIq=False, rxIq=False,
          tcxoVoltage=1.7, useRegulatorLDO=False, blocking=True)
@@ -57,4 +29,27 @@ sx.begin(freq=863.75, bw=125.0, sf=12, cr=8, syncWord=0x12,
 
 sx.setBlockingCallback(False, cb)
 
-sx.send(b'SIG1')
+
+from machine import Pin
+
+# Configurer GP0 en mode pull-down
+gp0 = Pin(0, Pin.IN, Pin.PULL_DOWN)
+
+# Configurer GP14 en mode pull-down
+gp14 = Pin(14, Pin.IN, Pin.PULL_DOWN)
+
+print("att")
+while True:
+    # Lire l'état des broches GP0 et GP14
+    gp0_state = gp0.value()
+    gp14_state = gp14.value()
+
+    # if gp0_state or gp14_state:
+
+    # Afficher l'état des broches sur la console
+    print(f"GP0: {gp0_state}, GP14: {gp14_state}")
+    
+    sx.send(b'SIG1')
+    
+    # Attendre un peu avant de lire à nouveau
+    time.sleep(1)
