@@ -11,7 +11,7 @@ from lora import LoRaTransceiver
 
 
 def sdtest():
-    spi = SPI(0,baudrate = 10000,polarity=1,phase=0,mosi=Pin(3),sck=Pin(2),miso=Pin(4))
+    spi = SPI(0,baudrate = 10000,polarity=1,phase=0,mosi=Pin(19),sck=Pin(18),miso=Pin(16))
     spi.init()  # Ensure right baudrate
     sd = sdcard.SDCard(spi, Pin(5))  # Compatible with PCB
     vfs = os.VfsFat(sd)
@@ -71,76 +71,76 @@ def sdtest():
 
 
 if __name__ == "__main__":
-    # ? I2C pin ICM20948 
-    i2c = I2C(1, sda=Pin(6), scl=Pin(7)) # SDA : GPIO0 ; SCL : GPIO1
-    sen = ICM20948AccGyr(i2c)
-    sen.to_sleep()
+    # # ? I2C pin ICM20948 
+    # i2c = I2C(1, sda=Pin(6), scl=Pin(7)) # SDA : GPIO0 ; SCL : GPIO1
+    # sen = ICM20948AccGyr(i2c)
+    # sen.to_sleep()
+    # # print(sen.icm.sleep)
+    # sen.wake_up()#jsp pk sa marche pas jpp
     # print(sen.icm.sleep)
-    sen.wake_up()#jsp pk sa marche pas jpp
-    print(sen.icm.sleep)
 
-    accxInit, accyInit, acczInit = sen.icm.acceleration
-    gyroxInit, gyroyInit, gyrozInit = sen.icm.gyro
-    accx, accy, accz = sen.icm.acceleration
-    gyrox, gyroy, gyroz = sen.icm.gyro
-    while accx == accxInit and accy == accyInit and accz == acczInit and gyrox == gyroxInit and gyroy == gyroyInit and gyroz == gyrozInit: 
-        accx, accy, accz = sen.icm.acceleration
-        gyrox, gyroy, gyroz = sen.icm.gyro
-        print("att diff ICM20948")
-        time.sleep(0.2)
+    # accxInit, accyInit, acczInit = sen.icm.acceleration
+    # gyroxInit, gyroyInit, gyrozInit = sen.icm.gyro
+    # accx, accy, accz = sen.icm.acceleration
+    # gyrox, gyroy, gyroz = sen.icm.gyro
+    # while accx == accxInit and accy == accyInit and accz == acczInit and gyrox == gyroxInit and gyroy == gyroyInit and gyroz == gyrozInit: 
+    #     accx, accy, accz = sen.icm.acceleration
+    #     gyrox, gyroy, gyroz = sen.icm.gyro
+    #     print("att diff ICM20948")
+    #     time.sleep(0.2)
     
-    print("pass ICM20948")
+    # print("pass ICM20948")
 
     sdtest()
 
-    uart= UART(1,baudrate=9600, tx=Pin(8), rx=Pin(9), timeout=5000, timeout_char=5000)  # initialisation UART 1 # TX : GPIO4 ; RX : GPIO 5 
-    gps = MicropyGPS() # création d'un objet GPS
+    # uart= UART(1,baudrate=9600, tx=Pin(8), rx=Pin(9), timeout=5000, timeout_char=5000)  # initialisation UART 1 # TX : GPIO4 ; RX : GPIO 5 
+    # gps = MicropyGPS() # création d'un objet GPS
     
-    if uart.any():  
-        donnees_brutes = str(uart.readline())
-        for x in donnees_brutes:
-            gps.update(x)
+    # if uart.any():  
+    #     donnees_brutes = str(uart.readline())
+    #     for x in donnees_brutes:
+    #         gps.update(x)
 
-        print('Latitude: ' ,gps.latitude_string())
-        print('Latitude (tuple): ' , gps.latitude)
-        print('Longitude: ' ,gps.longitude_string())
-        print('Longitude (tuple): ' , gps.longitude)
-        print('Altitude: ' , gps.altitude)
-        print('Vitesse: ', gps.speed_string('kph'))
-        print('Date: ' , gps.date_string('s_dmy'))
-        print('')
-    else : 
-        print("no gps data")
+    #     print('Latitude: ' ,gps.latitude_string())
+    #     print('Latitude (tuple): ' , gps.latitude)
+    #     print('Longitude: ' ,gps.longitude_string())
+    #     print('Longitude (tuple): ' , gps.longitude)
+    #     print('Altitude: ' , gps.altitude)
+    #     print('Vitesse: ', gps.speed_string('kph'))
+    #     print('Date: ' , gps.date_string('s_dmy'))
+    #     print('')
+    # else : 
+    #     print("no gps data")
 
 
-    # ? lora
-    print("start lora  ok")
-    lora = LoRaTransceiver(
-        spi_bus = 0,
-        clk = 18,
-        mosi = 19,
-        miso = 16,
-        cs = 27,
-        irq = 20,
-        rst = 15,
-        gpio = 26,
-    )
-    lora.setup(869.75)
-    """
-    ensie pine avec modif carte au ca ou
-        lora = LoRaTransceiver(
-            spi_bus=0,
-            clk=26,
-            mosi=27,
-            miso=12,#16
-            cs=19,
-            irq=20,
-            rst=15,
-            gpio=20,
-        )
-    """
+    # # ? lora
+    # print("start lora  ok")
+    # lora = LoRaTransceiver(
+    #     spi_bus = 0,
+    #     clk = 18,
+    #     mosi = 19,
+    #     miso = 16,
+    #     cs = 27,
+    #     irq = 20,
+    #     rst = 15,
+    #     gpio = 26,
+    # )
+    # lora.setup(869.75)
+    # """
+    # ensie pine avec modif carte au ca ou
+    #     lora = LoRaTransceiver(
+    #         spi_bus=0,
+    #         clk=26,
+    #         mosi=27,
+    #         miso=12,#16
+    #         cs=19,
+    #         irq=20,
+    #         rst=15,
+    #         gpio=20,
+    #     )
+    # """
 
-    lora.send("oui")
-    print("lora ok")
+    # lora.send("oui")
+    # print("lora ok")
 
-    # ? m
+    # # ? m

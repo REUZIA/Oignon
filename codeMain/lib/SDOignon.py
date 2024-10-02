@@ -2,10 +2,10 @@ import machine
 import os
 import sdcard
 from _thread import allocate_lock
+import time
 
-
-# ! vider donbner sd avant envoie
-
+#! vider donbner sd avant envoie
+#! prend du fat
 
 class FichierInteligen:
     def __init__(self, fichierName, nBflushData):
@@ -57,11 +57,11 @@ class FichierInteligen:
 class SDOignon:
     def __init__(
         self,
-        nbspi: int = 2,
+        nbspi: int = 0,
         baudrate: int = 10000,
-        pinSck: int = 4, 
+        pinSck: int = 2, 
         pinMiso: int = 3,
-        pinMosi: int = 5,
+        pinMosi: int = 4,
         pinSC: int = 5,
         fichierName: str = "data",
         colmSvg: str = "",
@@ -142,6 +142,20 @@ if __name__ == "__main__":
         colmSvg = ""
     )
 
-    sd.write("oui")
+    # sd = SDOignon(
+    #     nbspi = 0,
+    #     baudrate = 10000,
+    #     pinSck = 18,
+    #     pinMiso = 16, 
+    #     pinMosi = 19,
+    #     pinSC = 5,
+    #     fichierName = "TEST",
+    #     colmSvg = ""
+    # )
+    for i in range(10):
+        sd.write("oui;ono;oui")
+        time.sleep(0.1)
+    
+    
     print(sd.read())
     sd.umount()
