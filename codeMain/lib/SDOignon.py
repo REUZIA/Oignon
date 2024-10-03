@@ -91,7 +91,15 @@ class SDOignon:
         print(os.listdir("/fc"))
         self.write(colmSvg)
 
-
+        try:
+            self.sd = sdcard.SDCard(self.spi, machine.Pin(pinSC))  # Compatible with PCB
+            self.vfs = os.VfsFat(self.sd)
+            self.mount()
+            self.fich = FichierInteligen("/fc/" + fichierName, 100)
+        except OSError:
+            print("SD card not found. Setting self.fich to None.")
+            self.fich = None
+        #coonecter et foir si connecter lors des truc 
 
     def is_sd_mounted(self):
         try:
@@ -102,13 +110,15 @@ class SDOignon:
             return False  # Le système de fichiers n'est pas monté
 
     def write(self, chaineCara: str) -> None:
-        with self.lock:  # Acquérir le verrou
-            self.fich.write(chaineCara + "\n")
-            print("bytes written")
+        if self.fich:
+            with self.lock:  # Acquérir le verrou
+                self.fich.write(chaineCara + "\n")
+                print("bytes written")
 
     def read(self) -> str:
-        with self.lock:
-            return self.fich.read()
+        if self.fich:
+            with self.lock:
+                return self.fich.read()
 
     def mount(self) -> None:
         with self.lock:  # Acquérir le verrou

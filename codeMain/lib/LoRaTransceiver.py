@@ -43,6 +43,9 @@ class LoRaTransceiver:
         )
         self.received_data = None
 
+        self.nbPaquerEnvoyer:int = 0
+        
+
     def callback(self, events):
         if events & SX1262.RX_DONE:
             self.received_data, err = self.sx.recv()
@@ -50,6 +53,7 @@ class LoRaTransceiver:
             print("Received: {}, {}".format(self.received_data, error))
         elif events & SX1262.TX_DONE:
             print("TX done.")
+            self.nbPaquerEnvoyer += 1
 
     def setup(self,freq:float,bw:float=500,sf=12,cr=8,syncWork=0x34,power=14) -> None:
         # LoRa
@@ -97,10 +101,10 @@ if __name__ == "__main__":
         gpio = 26,#busy
     )
     # lora.setup(869.75,bw=500)
-    lora.setup(869.75,sf=6,cr=5)
+    lora.setup(869.75,bw=500,sf=12,cr=8)
     print("end init")
     # while True:
-    for _ in range(1):
+    for _ in range(1000):
         print("send")
         # lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
         

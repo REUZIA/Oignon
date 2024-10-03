@@ -3,7 +3,8 @@ from machine import Pin, I2C
 from ICM20948AccGyr import ICM20948AccGyr
 from SDOignon import SDOignon
 from GPSdata import GPSdata
-from lora import LoRaTransceiver
+from LoRaTransceiver import LoRaTransceiver
+import gc
 
 if __name__ == "__main__":
     
@@ -39,9 +40,12 @@ if __name__ == "__main__":
         gpio = 26,
     )
     lora.setup(869.75,sf=12,cr=8)
-
+    
+    gc.collect()
+    
     # ! test solo SD 
-    for _ in range(100):
+    # for _ in range(100):
+    for _ in range(10):
         sd.write("1:2:3;4:5:6s")
         time.sleep(0.1)
 
@@ -68,11 +72,9 @@ if __name__ == "__main__":
 
     # ! test lora + sd
     print("start LORA+SD")
-    line = "1:2:3;4:5:6"
-    for _ in range(10):  
+    line = "-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0"
+    for _ in range(100):  
         sd.write(line)
         lora.send(line)
         time.sleep(0.1)
     print("end LORA")
-
-    
