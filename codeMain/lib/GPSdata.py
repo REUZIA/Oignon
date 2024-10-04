@@ -103,10 +103,14 @@ if __name__ == "__main__":
     i = 0
     gp = GPSdata(1, rx=9, tx=8)
     #micropython.schedule(gp.schedule_update, 0)
+    gp.to_sleep()
+    time.sleep(1)
     gp.wake_up()
+    time.sleep(0.5)
+
     while True:
         print(f"[{i}] {gp}" )
-        time.sleep(0.2)
+        time.sleep(1)
         i+=1
 
 

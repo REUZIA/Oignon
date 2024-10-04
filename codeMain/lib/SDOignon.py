@@ -3,9 +3,10 @@ import os
 import sdcard
 from _thread import allocate_lock
 import time
+import gc
 
-#! vider donbner sd avant envoie
-#! prend du fat
+
+
 
 class FichierInteligen:
     def __init__(self, fichierName, nBflushData):
@@ -39,10 +40,8 @@ class FichierInteligen:
         self.fichier.write(text)
         self.indexNbFlushData += 1
         if self.indexNbFlushData == self.nBflushData:
-            print("femet")
             self.fermet()
             self.ouvrir()
-            print("on")
             self.indexNbFlushData = 0
 
     def read(self) -> str:
@@ -59,7 +58,7 @@ class SDOignon:
         self,
         nbspi: int = 0,
         baudrate: int = 10000,
-        pinSck: int = 2, 
+        pinSck: int = 2,
         pinMiso: int = 3,
         pinMosi: int = 4,
         pinSC: int = 5,
@@ -75,31 +74,38 @@ class SDOignon:
             sck=machine.Pin(pinSck),
             miso=machine.Pin(pinMiso),
         )
+        self.pinSC = pinSC
+        self.fichierName = fichierName
+        self.colmSvg = colmSvg
 
         self.lock = allocate_lock()  # Créer un verrou
 
         self.spi.init()
 
-        self.sd = sdcard.SDCard(self.spi, machine.Pin(pinSC))  # Compatible with PCB
+        self.isSDopen = False
 
-        self.vfs = os.VfsFat(self.sd)
+        self.initSD()
 
-        self.mount()
-        self.fich = FichierInteligen("/fc/" + fichierName, 100)
-
-        print("Filesystem check")
-        print(os.listdir("/fc"))
-        self.write(colmSvg)
-
+    def initSD(self):
         try:
-            self.sd = sdcard.SDCard(self.spi, machine.Pin(pinSC))  # Compatible with PCB
+            self.isSDopen = True
+
+            self.sd = sdcard.SDCard(
+                self.spi, machine.Pin(self.pinSC)
+            )  # Compatible avec le PCB
+
             self.vfs = os.VfsFat(self.sd)
             self.mount()
-            self.fich = FichierInteligen("/fc/" + fichierName, 100)
-        except OSError:
-            print("SD card not found. Setting self.fich to None.")
-            self.fich = None
-        #coonecter et foir si connecter lors des truc 
+            self.fich = FichierInteligen(# vas crée un nouv fichier à chaque déconnection sd
+                "/fc/" + self.fichierName, 50
+            )  # représente le nombre de trame avant écriture dans la SD
+
+            print(os.listdir("/fc"))
+            self.write(self.colmSvg)
+            
+        except:
+            print("faile init sd")
+            self.isSDopen = False
 
     def is_sd_mounted(self):
         try:
@@ -109,26 +115,34 @@ class SDOignon:
         except OSError:
             return False  # Le système de fichiers n'est pas monté
 
-    def write(self, chaineCara: str) -> None:
-        if self.fich:
+    def write(self, chaineCara: str) -> bool:
+        if self.isSDopen:
             with self.lock:  # Acquérir le verrou
                 self.fich.write(chaineCara + "\n")
-                print("bytes written")
+            return True    
+        self.initSD()
+        return False
 
     def read(self) -> str:
-        if self.fich:
+        if self.isSDopen:
             with self.lock:
                 return self.fich.read()
 
     def mount(self) -> None:
-        with self.lock:  # Acquérir le verrou
-            if not self.is_sd_mounted():
-                os.mount(self.vfs, "/fc")
+        if self.isSDopen :
+            with self.lock:  # Acquérir le verrou
+                if not self.is_sd_mounted():
+                    os.mount(self.vfs, "/fc")
+        else:
+          self.initSD() # on essaye de la monter 
 
     def umount(self) -> None:
-        with self.lock:  # Acquérir le verrou
-            if self.is_sd_mounted():
-                os.umount("/fc")
+        if not self.isSDopen :
+            with self.lock:  # Acquérir le verrou
+                if self.is_sd_mounted():
+                    os.umount("/fc")
+        else:
+          pass# plus de sd
 
 
 if __name__ == "__main__":
@@ -142,30 +156,34 @@ if __name__ == "__main__":
     # )
 
     sd = SDOignon(
-        nbspi = 0,
-        baudrate = 10000,
-        pinSck = 2,
-        pinMiso = 4, 
-        pinMosi = 3,
-        pinSC = 5,
-        fichierName = "TEST",
-        colmSvg = ""
+        nbspi=0,
+        baudrate=10000,
+        pinSck=2,
+        pinMiso=4,
+        pinMosi=3,
+        pinSC=5,
+        fichierName="TEST",
+        colmSvg="",
     )
 
     # sd = SDOignon(
     #     nbspi = 0,
     #     baudrate = 10000,
     #     pinSck = 18,
-    #     pinMiso = 16, 
+    #     pinMiso = 16,
     #     pinMosi = 19,
     #     pinSC = 5,
     #     fichierName = "TEST",
     #     colmSvg = ""
     # )
+
+    gc.collect()
+
+    print("Fin inint")
     for i in range(10):
+        print("ecire")
         sd.write("oui;ono;oui")
-        time.sleep(0.1)
-    
-    
-    print(sd.read())
+        time.sleep(1)
+
+    # print(sd.read())
     sd.umount()

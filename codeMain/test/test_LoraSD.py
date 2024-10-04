@@ -8,6 +8,10 @@ import gc
 
 gc.enable()
 
+#? pin laison montante 
+pinAllumer = Pin(1, Pin.IN, Pin.PULL_DOWN)
+pinEteindre = Pin(14, Pin.IN, Pin.PULL_DOWN)
+
 def test(nbtest: int) -> None:
     global lora
     """test les lora
@@ -19,6 +23,24 @@ def test(nbtest: int) -> None:
     freq: float = 869.75
     timeAtt:float = 0.1
     if nbtest == 0:  # j'att de recevoir
+        lastTimePakage = time.time()
+        befferLaisonMontante = False
+        while True:
+            # si je recoir paquer laison montante
+            Astatus = pinAllumer.values()
+            Estatus = pinEteindre.values()
+            
+            if (Astatus or Estatus) and not befferLaisonMontante:
+                befferLaisonMontante = True
+                print(f"Allumer :{Astatus} ; Eteindre : {Estatus}")
+                timeNow = time.time()
+                delta = timeNow-lastTimePakage
+                print(delta)
+                lastTimePakage = timeNow
+            elif befferLaisonMontante:
+                befferLaisonMontante = False
+                print("on à déjà detecter")
+            time.sleep(0.1)
         return None
     elif nbtest == 1:
         lora.setup(freq, bw=500, sf=12, cr=8, power=14)
@@ -50,36 +72,37 @@ def test(nbtest: int) -> None:
     print("send")
     stopAtSomePoint = 0
 
-    while lora.nbPaquerEnvoyer < 25 and stopAtSomePoint < 150:  # 15s max
+    while lora.nbPaquerEnvoyer < 25 :# on enlève le temps 
         # recupérai donner gps + ICM
-        res: str = "-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0"# str(senAccGyr) + ";" + str(gp) + ";" + str(stopAtSomePoint)
-        # sd.write(res)
+        #"-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0"#
+        res: str =  str(senAccGyr) + ";" + str(gp) + ";" + str(stopAtSomePoint)
+        sd.write(res)
         lora.send(res)
         stopAtSomePoint += 1
         time.sleep(timeAtt)
 
-    # sd.umount()
+    sd.umount()
 
 if __name__ == "__main__":
-    # # ! SD
-    # sd = SDOignon(
-    #     nbspi=0,
-    #     baudrate=2000000,
-    #     pinSck=2,
-    #     pinMiso=4,
-    #     pinMosi=3,
-    #     pinSC=5,
-    #     fichierName="",
-    #     colmSvg="accelero;gyro;latitude;longitude;altitude;nombre_satellite_utiliser;nombre_satellite_visible;vitesse;heure;nbpaker",
-    # )
+    # ! SD
+    sd = SDOignon(
+        nbspi=0,
+        baudrate=2000000,
+        pinSck=2,
+        pinMiso=4,
+        pinMosi=3,
+        pinSC=5,
+        fichierName="",
+        colmSvg="accelero;gyro;latitude;longitude;altitude;nombre_satellite_utiliser;nombre_satellite_visible;vitesse;heure;nbpaker",
+    )
 
-    # # ! ICM
-    # i2c = I2C(1, sda=Pin(6), scl=Pin(7))
-    # senAccGyr = ICM20948AccGyr(i2c)
-    # senAccGyr.wake_up()
+    # ! ICM
+    i2c = I2C(1, sda=Pin(6), scl=Pin(7))
+    senAccGyr = ICM20948AccGyr(i2c)
+    senAccGyr.wake_up()
 
-    # #! GPS
-    # gp = GPSdata(1, rx=9, tx=8)
+    #! GPS
+    gp = GPSdata(1, rx=9, tx=8)
 
     # ! LORA
     lora = LoRaTransceiver(
@@ -93,7 +116,9 @@ if __name__ == "__main__":
         gpio=26,
     )
 
-
-
+    lora.send("__Start__")
+    time.sleep(3)#bien sur le renvouyer
     test(3)
     print(lora.nbPaquerEnvoyer)
+    lora.send("__End__")
+    time.sleep(3)#bien sur le renvouyer

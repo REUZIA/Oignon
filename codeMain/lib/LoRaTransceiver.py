@@ -31,22 +31,40 @@ class LoRaTransceiver:
         rst=15,#Rest
         gpio=2,#BUSY
     ):
-        self.sx = SX1262(
-            spi_bus=spi_bus,
-            clk=clk,#sck
-            mosi=mosi,
-            miso=miso,
-            cs=cs,
-            irq=irq,#DIO1
-            rst=rst,#Rest
-            gpio=gpio,#BUSY
-        )
+        self.spi_bus=spi_bus
+        self.clk=clk
+        self.mosi=mosi
+        self.miso=miso
+        self.cs=cs
+        self.irq=irq
+        self.rst=rst
+        self.gpio=gpio
+
         self.received_data = None
-
         self.nbPaquerEnvoyer:int = 0
+        self.isInit:bool = False
         
+        self.init()
 
-    def callback(self, events):
+        
+    def init(self)->None:
+        try : 
+            self.isInit:bool = True
+            self.sx = SX1262(
+                spi_bus=self.spi_bus,
+                clk=self.clk,#sck
+                mosi=self.mosi,
+                miso=self.miso,
+                cs=self.cs,
+                irq=self.irq,#DIO1
+                rst=self.rst,#Rest
+                gpio=self.gpio,#BUSY
+            )
+        except:
+            print("erreur init lora ")
+            self.isInit:bool = False
+            
+    def callback(self, events)->None:
         if events & SX1262.RX_DONE:
             self.received_data, err = self.sx.recv()
             error = SX1262.STATUS[err]
@@ -55,30 +73,41 @@ class LoRaTransceiver:
             print("TX done.")
             self.nbPaquerEnvoyer += 1
 
-    def setup(self,freq:float,bw:float=500,sf=12,cr=8,syncWork=0x34,power=14) -> None:
-        # LoRa
-        self.sx.begin(
-            freq=freq,#869.75
-            bw=bw,
-            sf=sf,
-            cr=cr,
-            syncWord=syncWork,
-            power=power,
-            currentLimit=60.0,
-            preambleLength=8,
-            implicit=False,
-            implicitLen=0xFF,
-            crcOn=True,
-            txIq=False,
-            rxIq=False,
-            useRegulatorLDO=False,
-            blocking=True,
-        )
+    def setup(self,freq:float,bw:float=500,sf=12,cr=8,syncWork=0x34,power=14) -> bool:
+        erreur:bool = False
+        if self.isInit:
+            try :
+                # LoRa
+                self.sx.begin(
+                    freq=freq,#869.75
+                    bw=bw,
+                    sf=sf,
+                    cr=cr,
+                    syncWord=syncWork,
+                    power=power,
+                    currentLimit=60.0,
+                    preambleLength=8,
+                    implicit=False,
+                    implicitLen=0xFF,
+                    crcOn=True,
+                    txIq=False,
+                    rxIq=False,
+                    useRegulatorLDO=False,
+                    blocking=True,
+                )
 
-        self.sx.setBlockingCallback(False, self.callback)
+                self.sx.setBlockingCallback(False, self.callback)
+            except:
+                self.isInit:bool = False
+                erreur:bool = True
+        return not erreur
 
     def send(self, text: str) -> None:
-        print("byte :",self.sx.send(text.encode()))
+        try :
+            print("byte :",self.sx.send(text.encode()))
+        except:
+            print("erreur lora")
+            pass
 
     def recive(self) -> str:
         res = ""
@@ -104,7 +133,7 @@ if __name__ == "__main__":
     lora.setup(869.75,bw=500,sf=12,cr=8)
     print("end init")
     # while True:
-    for _ in range(1000):
+    for _ in range(1):
         print("send")
         # lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
         
