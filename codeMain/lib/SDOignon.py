@@ -83,7 +83,9 @@ class SDOignon:
         self.spi.init()
 
         self.isSDopen = False
-
+        self.sd = sdcard.SDCard(
+            self.spi, machine.Pin(self.pinSC)
+        )  # Compatible avec le PCB
         self.initSD()
 
     def initSD(self):
@@ -177,13 +179,13 @@ if __name__ == "__main__":
     #     colmSvg = ""
     # )
 
-    gc.collect()
+    # gc.collect()
 
-    print("Fin inint")
-    for i in range(10):
-        print("ecire")
-        sd.write("oui;ono;oui")
-        time.sleep(1)
+    # print("Fin inint")
+    # for i in range(10):
+    #     print("ecire")
+    #     sd.write("oui;ono;oui")
+    #     time.sleep(1)
 
     # print(sd.read())
     sd.umount()

@@ -54,7 +54,7 @@ def eteindre(pin)->None:
 
 if __name__ == "__main__":
     # ? initaliser composant
-    timeWaitBoucl: float = 1  # 0.01
+    timeWaitBoucl: float = 0.01
     mainModuleOn = 0
 
     #! SD
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         pinMiso=4,
         pinMosi=3,
         pinSC=5,
-        fichierName="test",
+        fichierName="mainData",
         colmSvg="accelero;gyro;autre",
     )
 

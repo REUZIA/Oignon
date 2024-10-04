@@ -44,6 +44,8 @@ class LoRaTransceiver:
         self.nbPaquerEnvoyer:int = 0
         self.isInit:bool = False
         
+        self.pasTermineEnvoyer:bool = False
+
         self.init()
 
         
@@ -65,12 +67,14 @@ class LoRaTransceiver:
             self.isInit:bool = False
             
     def callback(self, events)->None:
+
         if events & SX1262.RX_DONE:
             self.received_data, err = self.sx.recv()
             error = SX1262.STATUS[err]
             print("Received: {}, {}".format(self.received_data, error))
         elif events & SX1262.TX_DONE:
             print("TX done.")
+            self.pasTermineEnvoyer = False
             self.nbPaquerEnvoyer += 1
 
     def setup(self,freq:float,bw:float=500,sf=12,cr=8,syncWork=0x34,power=14) -> bool:
@@ -104,7 +108,9 @@ class LoRaTransceiver:
 
     def send(self, text: str) -> None:
         try :
-            print("byte :",self.sx.send(text.encode()))
+            if not self.pasTermineEnvoyer:
+                self.pasTermineEnvoyer = True
+                print("byte :",self.sx.send(text.encode()))
         except:
             print("erreur lora")
             pass
@@ -133,10 +139,10 @@ if __name__ == "__main__":
     lora.setup(869.75,bw=500,sf=12,cr=8)
     print("end init")
     # while True:
-    for _ in range(1):
+    for _ in range(100):
         print("send")
         # lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
         
-        lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
+        lora.send(f"[{_}]-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
         # lora.send(f"-0.07:{10**_}")
         time.sleep(0.1)
