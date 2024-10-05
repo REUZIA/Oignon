@@ -3,55 +3,136 @@ from machine import Pin, I2C
 from ICM20948AccGyr import ICM20948AccGyr
 from SDOignon import SDOignon
 from GPSdata import GPSdata
+from LoRaTransceiver import LoRaTransceiver
+import gc
 
-mainModuleOn = 0
+toggelApo:bool = False
+toggelAll:bool = False
+toggelEte:bool = False
+
+def apoger(pin) -> None:
+    global sd,toggelApo
+    """_summary_
+        fonction appeler à l'appoger
+        elle vas stocker le temps (du gps) dans un le fichier APOGER.csv
+    """
+    print("interup apoger")
+    if not toggelApo:
+        toggelApo = True
+        # on écire apoger 
+        res = str(gp).split(";")[-1]
+        res = f"\nAPOGER;{res}\n"
+
+        # envoyer carte sd
+        sd.write(res)
+        # envoyer gnd station
+        lora.send(res)
+         
+        # Désactiver l'interruption
+        gpAllumer.irq(handler=None)
+
+# detecter si on veut alluer
+def allumer(pin)->None:
+    print("interup allumer")
+    global mainModuleOn,toggelAll,toggelEte
+    if not toggelAll:
+        toggelAll = True
+        toggelEte = False
+
+        mainModuleOn = True
+
+# detecter si on veut eteindre
+def eteindre(pin)->None:
+    print("interup eteindre")
+    global mainModuleOn,toggelAll,toggelEte
+    if not toggelEte:
+        # on dit que c etein pour l'interup
+        toggelAll = False
+        toggelEte = True
+        # on fait eteindre dans la boucle 
+        mainModuleOn = False
+
 if __name__ == "__main__":
-    # start_time = time.time()
-    #? initaliser composant 
-    timeWaitBoucl:float=0.001
+    # ? initaliser composant
+    timeWaitBoucl: float = 0.01
+    mainModuleOn = 0
 
+    #! SD
     sd = SDOignon(
-        1,
-        Pin(10),
-        Pin(11),
-        Pin(12),
-        Pin(13),
-        "data.txt",
+        nbspi=0,
+        baudrate=2000000,
+        pinSck=2,
+        pinMiso=4,
+        pinMosi=3,
+        pinSC=5,
+        fichierName="mainData",
+        colmSvg="accelero;gyro;autre",
     )
 
-    i2c = I2C(0, sda=Pin(0), scl=Pin(1))
+    # ! ICM
+    i2c = I2C(1, sda=Pin(6), scl=Pin(7))
     senAccGyr = ICM20948AccGyr(i2c)
-    
-    gp = GPSdata(1)
+    senAccGyr.wake_up()
 
-    #? maitre le composant en sleep mode 
+    #! GPS
+    gp = GPSdata(1, rx=9, tx=8)
+
+    # ! LORA
+    lora = LoRaTransceiver(
+        spi_bus=0,
+        clk=2,
+        mosi=3,
+        miso=4,
+        cs=27,
+        irq=20,
+        rst=15,
+        gpio=26,
+    )
+    lora.setup(869.75, sf=12, cr=8)
+
+    gc.collect()
+
+    # ? set up interupt
+        # ? laison montante
+    gpAllumer = Pin(1, Pin.IN, Pin.PULL_DOWN)
+    gpAllumer.irq(trigger=Pin.IRQ_RISING, handler=allumer)
+    gpEteindre = Pin(14, Pin.IN, Pin.PULL_DOWN)
+    gpEteindre.irq(trigger=Pin.IRQ_RISING, handler=eteindre)
+        # ? altimetrique
+    gpApoger = Pin(0, Pin.IN, Pin.PULL_DOWN)
+    gpApoger.irq(trigger=Pin.IRQ_RISING, handler=apoger)
+
+    # ? maitre le composant en sleep mode
     senAccGyr.to_sleep()
     gp.to_sleep()
 
+    print("start")
     while True:
         time.sleep(timeWaitBoucl)
-        # detecter si on veut alluer 
-        if mainModuleOn:# on allume les modules
+        
+        if mainModuleOn:  # on allume les modules
             print("allumer")
             senAccGyr.wake_up()
             gp.wake_up()
-            # sleep ?
-        
-        #? quand boucle on 
+            # pas sleep lora si on envoie pas
+            time.sleep(1)
+
+        # ? quand boucle on
         while mainModuleOn:
             time.sleep(timeWaitBoucl)
-            #? lire les datas
-            res =""
-            res+=str(senAccGyr)+";"+str(gp)
-            #? envoi data
+            # ? lire les datas
+            res = ""
+            res += str(senAccGyr) + ";" + str(gp)
+            print("res:", res)
+            # ? envoi data
             # envoyer carte sd
-            sd.add(res)
+            sd.write(res)
             # envoyer gnd station
-            #? detecter si off
+            lora.send(res)
 
-            if not mainModuleOn:# on etteint les modules
+            # ? si off
+            if not mainModuleOn:  # on etteint les modules
                 print("eteindre")
+                mainModuleOn = 0
                 senAccGyr.to_sleep()
                 gp.to_sleep()
-
-
