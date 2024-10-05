@@ -70,8 +70,7 @@ if __name__ == "__main__":
     )
 
     # ! ICM
-    i2c = I2C(1, sda=Pin(6), scl=Pin(7))
-    senAccGyr = ICM20948AccGyr(i2c)
+    senAccGyr = ICM20948AccGyr(i2c_bus=1,sda_nbPin=6,scl_nbPin=7)
     senAccGyr.wake_up()
 
     #! GPS

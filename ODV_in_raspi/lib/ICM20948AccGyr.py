@@ -5,15 +5,17 @@ import icm20948
 
 
 class ICM20948AccGyr:
-    def __init__(self, i2c: I2C):
+    def __init__(self, i2c_bus:int=1,sda_nbPin:int=6,scl_nbPin:int=7):
+        self.i2c =  I2C(i2c_bus, sda=Pin(sda_nbPin), scl=Pin(scl_nbPin))
         self.isinit:bool= True
         self.init()
 
     def init(self)->None:
+        
         try :
             self.isinit:bool= True 
             # Initialisation de l'objet ICM20948 avec l'interface I2C fournie
-            self.icm = icm20948.ICM20948(i2c)
+            self.icm = icm20948.ICM20948(self.i2c)
 
             # Configuration de l'ICM20948
             self.icm.clock_select = icm20948.CLK_SELECT_BEST  # Sélection de l'horloge la plus précise
@@ -28,7 +30,8 @@ class ICM20948AccGyr:
             # Activation des capteurs
             self.icm.gyro_enabled = icm20948.GYRO_ENABLED
             self.icm.acc_enabled = icm20948.ACC_ENABLED
-        except:
+        except OSError as e:
+            print("Error accessing ICM:", e)
             self.isinit:bool= False
 
     def to_sleep(self) -> None:
@@ -74,8 +77,7 @@ class ICM20948AccGyr:
 
 if __name__ == "__main__":
     #init
-    i2c = I2C(1, sda=Pin(6), scl=Pin(7))
-    sen = ICM20948AccGyr(i2c)
+    sen = ICM20948AccGyr(i2c_bus=1,sda_nbPin=6,scl_nbPin=7)
     
     # commande 
     sen.to_sleep()
@@ -85,7 +87,7 @@ if __name__ == "__main__":
     
 
     # affiche valeur
-    for i in range(20):
+    for i in range(1):
         # accx, accy, accz = sen.icm.acceleration
         # gyrox, gyroy, gyroz = sen.icm.gyro
         # print(f"x: {accx:.2f}m/s2, y: {accy:.2f}m/s2, z: {accz:.2f}m/s2")

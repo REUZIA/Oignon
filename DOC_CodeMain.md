@@ -1,5 +1,7 @@
 DOC Oignon **ODC**
 
+
+
 # à la fin quand on touche plus au code 
 supprimer tout les elemnt test de la board 
 vider la sd
@@ -11,13 +13,20 @@ vider la sd
 - Antenne gps 
 - Antenne lora 
 
-# Shema 
+# Shema et repartition code
 discode : https://discord.com/channels/610534406922174495/1263142960497688578/1291515100024541275
+2 fichier; l'un avec les librery de compiler, l'autre avec les librery en cliar, se qui à été mis sur la carte c des compiler pour gagnier espace mémoir 
+
+# compiler 
+https://pypi.org/project/mpy-cross/
+```console
+mpy-cross my_app.py
+```
 
 # SD
 Protocole : 
     nbspi = 0,
-    baudrate = 2000000,
+    baudrate = 2000000,#même baudrate que le lora 
     pinSck = 2,
     pinMiso = 4, 
     pinMosi = 3,
@@ -57,6 +66,7 @@ gp :
   rx = 9
   tx = 8
 il y une fonction bloquante, mais elle prend pas beaucoup de temps et même si il y a pas de fixe il continue à tournée
++ peut pas fair d'erreur car lis spi si ya rien renvoie 0
 
 # LORA sx
 lora:

@@ -115,10 +115,11 @@ if __name__ == "__main__":
         rst=15,
         gpio=26,
     )
-
+    print("__start__")
     lora.send("__Start__")
     time.sleep(3)#bien sur le renvouyer
-    test(1)
+    test(5)
     print(lora.nbPaquerEnvoyer)
     lora.send("__End__")
+    print("__end__")
     time.sleep(3)#bien sur le renvouyer

@@ -15,13 +15,12 @@ if __name__ == "__main__":
         pinMiso=4,
         pinMosi=3,
         pinSC=5,
-        fichierName="test",
+        fichierName="testModuleCLass",
         colmSvg="accelero;gyro;autre",
     )
 
     # ! ICM
-    i2c = I2C(1, sda=Pin(6), scl=Pin(7))
-    senAccGyr = ICM20948AccGyr(i2c)
+    senAccGyr = ICM20948AccGyr()
     senAccGyr.wake_up()
 
     #! GPS
@@ -41,10 +40,6 @@ if __name__ == "__main__":
     lora.setup(869.75, sf=12, cr=8)
 
     gc.collect()
-
-    for i in range(10):
-        sd.write("oui;ono;oui")
-        time.sleep(0.1)
 
     # ! test solo SD
     # for _ in range(100):
