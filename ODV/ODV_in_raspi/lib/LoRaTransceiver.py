@@ -135,14 +135,31 @@ if __name__ == "__main__":
         rst = 15,#reset
         gpio = 26,#busy
     )
-    # lora.setup(869.75,bw=500)
-    lora.setup(869.75,bw=500,sf=6,cr=5)
-    print("end init")
+    freq = 869.75
+    
+    # lora.setup(freq, bw=500, sf=12, cr=8, power=14)
+    #lora.setup(freq, bw=250, sf=12, cr=8, power=14)
+    #lora.setup(freq, bw=125, sf=12, cr=8, power=14)
+    #lora.setup(freq, bw=500, sf=9, cr=8, power=14)
+    #lora.setup(freq, bw=500, sf=7, cr=8, power=14)
+    #lora.setup(freq, bw=500, sf=12, cr=6, power=14)
+    #lora.setup(freq, bw=500, sf=12, cr=5, power=14)
+    #lora.setup(freq, bw=500, sf=12, cr=8, power=7)
+    #lora.setup(freq, bw=500, sf=12, cr=8, power=2)
+
+    #lora.setup(869.75,bw=500,sf=12,cr=8,power=14)
+    # print("end init")
     # while True:
-    for _ in range(100):
-        # print("send")
-        # lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
+    # for _ in range(1):
+    #     # print("send")
+    #     # lora.send("-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
         
-        lora.send(f"[{_}]-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
-        # lora.send(f"-0.07:{10**_}")
-        time.sleep(0.1)
+    #     lora.send(f"[{_}]-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
+    #     # lora.send(f"-0.07:{10**_}")
+    #     time.sleep(0.1)
+
+    _ = 0
+    while lora.nbPaquerEnvoyer<20:
+        _+=1
+        lora.send(f"[{lora.nbPaquerEnvoyer}]-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
+        time.sleep(0.2)

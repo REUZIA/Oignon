@@ -72,7 +72,7 @@ if __name__ == "__main__":
     print("start LORA+SD")
     line = f"{senAccGyr};{gp}"
     for _ in range(100):
-        sd.write(line)
+        # sd.write(line)
         lora.send(line)
         time.sleep(0.1)
     print("end LORA")

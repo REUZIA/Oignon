@@ -21,7 +21,7 @@ def test(nbtest: int) -> None:
     """
 
     freq: float = 869.75
-    timeAtt:float = 5
+    timeAtt:float = 0.2
     if nbtest == 0:  # j'att de recevoir
         lastTimePakage = time.time()
         befferLaisonMontante = False
@@ -72,12 +72,13 @@ def test(nbtest: int) -> None:
     print("send")
     stopAtSomePoint = 0
 
-    while lora.nbPaquerEnvoyer < 25 :# on enlève le temps 
+    while lora.nbPaquerEnvoyer < 20 :# on enlève le temps 
         # recupérai donner gps + ICM
         #"-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0"#
         res: str =  f"[{lora.nbPaquerEnvoyer}]"+str(senAccGyr) + ";" + str(gp) + ";" + str(stopAtSomePoint)
         sd.write(res)
         lora.send(res)
+        print(res)
         stopAtSomePoint += 1
         time.sleep(timeAtt)
 
@@ -97,8 +98,7 @@ if __name__ == "__main__":
     )
 
     # ! ICM
-    i2c = I2C(1, sda=Pin(6), scl=Pin(7))
-    senAccGyr = ICM20948AccGyr(i2c)
+    senAccGyr = ICM20948AccGyr()
     senAccGyr.wake_up()
 
     #! GPS
@@ -116,10 +116,10 @@ if __name__ == "__main__":
         gpio=26,
     )
     print("__start__")
-    lora.send("__Start__")
+    #lora.send("__Start__")
     time.sleep(3)#bien sur le renvouyer
-    test(5)
+    test(1)
     print(lora.nbPaquerEnvoyer)
-    lora.send("__End__")
+    #lora.send("__End__")
     print("__end__")
     time.sleep(3)#bien sur le renvouyer

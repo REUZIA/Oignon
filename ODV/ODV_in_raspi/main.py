@@ -54,7 +54,7 @@ def eteindre(pin)->None:
 
 if __name__ == "__main__":
     # ? initaliser composant
-    timeWaitBoucl: float = 0.01
+    timeWaitBoucl: float = 0.2
     mainModuleOn = 0
 
     #! SD
@@ -106,6 +106,7 @@ if __name__ == "__main__":
     gp.to_sleep()
 
     print("start")
+    # mainModuleOn=True#!debug
     while True:
         time.sleep(timeWaitBoucl)
         
@@ -122,7 +123,7 @@ if __name__ == "__main__":
             # ? lire les datas
             res = ""
             res += str(senAccGyr) + ";" + str(gp)
-            print("res:", res)
+            print("res:", res) # ! debug
             # ? envoi data
             # envoyer carte sd
             sd.write(res)

@@ -92,8 +92,6 @@ if __name__ == "__main__":
         # gyrox, gyroy, gyroz = sen.icm.gyro
         # print(f"x: {accx:.2f}m/s2, y: {accy:.2f}m/s2, z: {accz:.2f}m/s2")
         # print("x:{:.2f}deg/s, y:{:.2f}deg/s, z:{:.2f}deg/s".format(gyrox, gyroy, gyroz))
-        print(i)
-        print(sen)
+        print(f"[{i}]",sen)
 
-        print()
         time.sleep(1)

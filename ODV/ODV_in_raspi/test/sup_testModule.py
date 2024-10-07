@@ -7,11 +7,10 @@ from ICM20948AccGyr import ICM20948AccGyr
 from SDOignon import SDOignon
 from utime import sleep
 from micropyGPS import MicropyGPS  # https://github.com/inmcm/micropyGPS
-from lora import LoRaTransceiver
 
 
 def sdtest():
-    spi = SPI(0,baudrate = 10000,polarity=1,phase=0,mosi=Pin(19),sck=Pin(18),miso=Pin(16))
+    spi = SPI(0,baudrate = 10000,polarity=1,phase=0,mosi=Pin(3),sck=Pin(2),miso=Pin(4))
     spi.init()  # Ensure right baudrate
     sd = sdcard.SDCard(spi, Pin(5))  # Compatible with PCB
     vfs = os.VfsFat(sd)
