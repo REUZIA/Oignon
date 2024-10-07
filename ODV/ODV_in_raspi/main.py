@@ -6,6 +6,8 @@ from GPSdata import GPSdata
 from LoRaTransceiver import LoRaTransceiver
 import gc
 
+gc.enable()
+
 toggelApo:bool = False
 toggelAll:bool = False
 toggelEte:bool = False
@@ -105,6 +107,7 @@ if __name__ == "__main__":
     senAccGyr.to_sleep()
     gp.to_sleep()
 
+    iswakepup:bool = False
     print("start")
     # mainModuleOn=True#!debug
     while True:
@@ -114,16 +117,17 @@ if __name__ == "__main__":
             print("allumer")
             senAccGyr.wake_up()
             gp.wake_up()
+            iswakepup = True
             # pas sleep lora si on envoie pas
             time.sleep(1)
 
         # ? quand boucle on
-        while mainModuleOn:
+        while mainModuleOn and iswakepup:
             time.sleep(timeWaitBoucl)
             # ? lire les datas
             res = ""
             res += str(senAccGyr) + ";" + str(gp)
-            print("res:", res) # ! debug
+            # print("res:", res) # ! debug
             # ? envoi data
             # envoyer carte sd
             sd.write(res)
@@ -131,8 +135,9 @@ if __name__ == "__main__":
             lora.send(res)
 
             # ? si off
-            if not mainModuleOn:  # on etteint les modules
+            if not mainModuleOn :  # on etteint les modules
                 print("eteindre")
-                mainModuleOn = 0
+                mainModuleOn = False
                 senAccGyr.to_sleep()
                 gp.to_sleep()
+                iswakepup:bool = False
