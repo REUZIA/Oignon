@@ -141,5 +141,9 @@ doit enlever le timer max (quand ne clignote plus faut l'eteindre et rallumer )
 att temps pour boucl 0.2 timeWaitBoucl
 quand allumer : 
   envoie en lora(quand il peut) + sd
-  
+  acceleroXYZ;gyroXYZ;latitude;longitude;altitude;nombre_satellite_utiliser;nombre_satellite_visible;vitesse;heure
   ex: -0.03:-0.00:9.91;0.01:0.00:0.01;0:0:0.0:N;0:0:0.0:W;0.0;0;1;0.0;0:0:0.0
+
+
+# Remarque 
+le file alimentnat la raspy + module (en haut à droite) son inverser (rouge = - et noir = + )
