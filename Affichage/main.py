@@ -48,7 +48,7 @@ def update():
     #Change rotation of 3d rocket object
     rocket.rotation_x +=20*time.dt
 
-    test.text = str(tm.datetime.now())[:-5]
+    #test.text = str(tm.datetime.now())[:-5]
 
     #Change value of altitude
     altitude.alt_value += 1
@@ -60,8 +60,9 @@ def update():
     rotation.yaw = 10
     rotation.pitch = 10
     rotation.update()
+    maxima.update(altitude.alt_value)
 
-    alt = altitude.vertical_altitude.anchor.position_getter()
+    #alt = altitude.vertical_altitude.anchor.position_getter()
 
     #altitude.vertical_altitude.anchor.position_setter((alt[0], -altitude.alt_value*0.00225, alt[2]))
     None
@@ -202,21 +203,63 @@ class VelocityMonitor():
 
         self.vel = 0
 
+    def update(self, vel = None):
+        if(vel != None):
+            self.vel = vel
+        self.screen_vel.set_text(str(self.vel))
 
+class MaximaMonitor():
+    def __init__(self, pos, scale):
+        self.screen_max = DataScreen(pos, scale)
+        self.tag_max = Text(text="MAX", parent=camera.ui, origin=(0, 0), scale=scale, world_scale=24)
+        self.tag_max.position = (pos[0], pos[1] + 0.05, pos[2])
+
+        self.max = 0
+
+    def update(self, alt):
+        if(alt>self.max):
+            self.max = alt
+            self.screen_max.set_text(str(self.max))
+
+class AccelerationMonitor():
+    def __init__(self, pos, scale):
+        self.screen_acc = DataScreen(pos, scale)
+        self.tag_max = Text(text="ACC", parent=camera.ui, origin=(0, 0), scale=scale, world_scale=24)
+        self.tag_max.position = (pos[0], pos[1] + 0.05, pos[2])
+
+        self.acceleration = 0
+
+    def update(self, acc=None):
+        if (acc != None):
+            self.acc = acc
+        self.screen_acc.set_text(str(self.acc))
+
+
+
+###Buttons functions
+
+def CSV_button_action():
+    print("CSV button clicked")
+
+def start_button_action():
+    print("Start button clicked")
+
+def sleep_button_action():
+    print("Sleep button clicked")
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     #altitude_value = 0
 
     app = launch_app()
-    descr = dedent('''
+    """descr = dedent('''
           <red>Rainstorm<default> <red>Rainstorm<default>
           Summon a rain storm to deal 5 <blue>water<default> damage to everyone, test including yourself.
           1234 1234 1234 1234 1234 1234 2134 1234 1234 1234 1234 1234 2134 2134 1234 1234 1234 1234
           Lasts for 4 rounds.''').strip()
 
     Text.default_resolution = 2160 * Text.size
-    test = Text(text=descr, wordwrap=30)
+    test = Text(text=descr, wordwrap=30)"""
 
 
 
@@ -228,6 +271,23 @@ if __name__ == '__main__':
     altitude = AltitudeMonitor((-1/4, 0, 0), 0.15)
     rotation = RotationMonitor((-0.7, 1/3, 0), 0.1)
     coords = CoordinatesMonitor((-0.65, -1/3, 0), 0.1)
+    velocity = VelocityMonitor((1/6,0,0), 0.1)
+    maxima = MaximaMonitor((0,0,0), 0.1)
+    acceleration = AccelerationMonitor((1/3, 0, 0), 0.1)
+
+
+    ###Buttons
+    button_csv = Button(text="CSV", scale=(0.1,0.05), position=(3/6, 0, 0))
+    button_csv._on_click = CSV_button_action
+
+    button_start = Button(text="Start", scale=(0.1, 0.05), position=(4 / 6, 0, 0))
+    button_start._on_click = start_button_action
+
+    button_sleep = Button(text="Sleep", scale=(0.1, 0.05), position=(5 / 6, 0, 0))
+    button_sleep._on_click = sleep_button_action
+
+
+
     #velocity = VelocityMonitor((0, 0, 0), 0.15)
     #altitude.set_text('')
     rocket.position_setter((-5, 0 ,0))
