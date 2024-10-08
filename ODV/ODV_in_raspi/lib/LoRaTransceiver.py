@@ -137,7 +137,7 @@ if __name__ == "__main__":
     )
     freq = 869.75
     
-    # lora.setup(freq, bw=500, sf=12, cr=8, power=14)
+    lora.setup(freq, bw=500, sf=12, cr=8, power=14)
     #lora.setup(freq, bw=250, sf=12, cr=8, power=14)
     #lora.setup(freq, bw=125, sf=12, cr=8, power=14)
     #lora.setup(freq, bw=500, sf=9, cr=8, power=14)
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     #     time.sleep(0.1)
 
     _ = 0
-    while lora.nbPaquerEnvoyer<20:
+    while lora.nbPaquerEnvoyer<10:
         _+=1
         lora.send(f"[{lora.nbPaquerEnvoyer}]-0.07:-0.14:9.87;0.01:0.00:0.00;48:48:50.9:N;2:22:40.6:E;89.5;6;8;0.118528;10:31:35.0")
         time.sleep(0.2)

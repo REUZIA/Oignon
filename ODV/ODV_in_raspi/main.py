@@ -89,7 +89,8 @@ if __name__ == "__main__":
         rst=15,
         gpio=26,
     )
-    lora.setup(869.75, sf=12, cr=8)
+    lora.setup(869.75, bw=500, sf=12, cr=8, power=14)
+
 
     gc.collect()
 

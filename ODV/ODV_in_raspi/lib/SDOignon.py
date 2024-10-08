@@ -87,6 +87,10 @@ class SDOignon:
 
         self.spi.init()
 
+        # self.sd = sdcard.SDCard(
+        #     self.spi, machine.Pin(self.pinSC)
+        # )  # Compatible avec le PCB
+
         self.isSDopen = False
 
         self.initSD()

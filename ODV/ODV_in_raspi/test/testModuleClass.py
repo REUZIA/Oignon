@@ -71,7 +71,7 @@ if __name__ == "__main__":
     # ! test lora + sd
     print("start LORA+SD")
     line = f"{senAccGyr};{gp}"
-    for _ in range(100):
+    for _ in range(10):
         # sd.write(line)
         lora.send(line)
         time.sleep(0.1)
