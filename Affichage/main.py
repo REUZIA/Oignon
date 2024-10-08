@@ -11,30 +11,7 @@ import tkinter as tk
 from ursina import *
 import datetime as tm
 
-class RocketObject(Entity):
-    def __init__(self, **kwargs):
-        super().__init__()
-        #self.name = name
-        self.model = None
-        self.position = np.array([0,0,0])
-        self.previous_position = np.array([0, 0, 0])
-        self.satellite = 0
-        self.speed = 0
-        self.time = None
-
-        self.current_orientation = np.array([0,0,0])
-        self.target_orientation = np.array([0, 0, 0])
-
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-        def input(self, key):
-            if key == 'space':
-                self.animate_x(2, duration=1)
-
-        def update(self):
-            self.x += held_keys['d'] * time.dt * 10
-            self.x -= held_keys['a'] * time.dt * 10
+import gc
 
 
 
@@ -46,7 +23,7 @@ def update():
     """
 
     #Change rotation of 3d rocket object
-    rocket.rotation_x +=20*time.dt
+    #rocket.rotation_x +=20*time.dt
 
     #test.text = str(tm.datetime.now())[:-5]
 
@@ -55,16 +32,37 @@ def update():
     altitude.set_altitude(altitude.alt_value)
     altitude.update_vertical_display()
 
+    #Get roll, yaw and pitch values
+    roll, yaw, pitch = rotation_calculator([0,0,300], [0,0,400])
     #Change value of rotation
-    rotation.roll = 10
-    rotation.yaw = 10
-    rotation.pitch = 10
+    rotation.roll = round(roll,2)
+    rotation.yaw = round(yaw,2)
+    rotation.pitch = round(pitch,2)
     rotation.update()
+
+    #Update rotation of rocket
+    """rocket.previous_position = rocket.current_position
+    rocket.current_position = <new position>"""
+
+
+    #Update Maxima screen
     maxima.update(altitude.alt_value)
+
+    #Update Velocity
+    velocity.update(1337)
+
+    #Update Acceleration
+    acceleration.update(57)
+
+    #Update Position
+    coords.update(1, 2)
 
     #alt = altitude.vertical_altitude.anchor.position_getter()
 
     #altitude.vertical_altitude.anchor.position_setter((alt[0], -altitude.alt_value*0.00225, alt[2]))
+
+    #Memory optimization
+    gc.collect()
     None
 
 
@@ -138,10 +136,10 @@ class VerticalAltitude():
         self.anchor = Entity(parent=camera.ui,
             model='quad',
             #size, position, and rotate your image here
-            texture = './obj/rectangle_invisible2.png',
+            texture = './obj/rectangle_invisible.png',
             position = pos,
             scale = scale, origin =(0,0))
-        self.texts = [Text(text=str(i*100), wordwrap=10, origin =(0,0), world_scale = 120, position = (pos[0]+0.23, pos[1] + i*1.5, pos[2]+1), parent = self.anchor) for i in range(-5, 90)]
+        self.texts = [Text(text=str(i*100), wordwrap=10, origin =(0,0), world_scale = 120, position = (pos[0]+0.23, pos[1] + i*1.5, pos[2]+1), parent = self.anchor) for i in range(-5, 50)]
         print(len(self.texts))
 
     def set_height(self, alt_value):
@@ -195,6 +193,14 @@ class CoordinatesMonitor():
         self.lat = 0
         self.lon = 0
 
+    def update(self, lat = None, lon = None):
+        if(lat != None):
+            self.lat = lat
+        self.screen_lat.set_text(str(self.lat))
+        if (lon != None):
+            self.lon = lon
+        self.screen_lon.set_text(str(self.lon))
+
 class VelocityMonitor():
     def __init__(self, pos, scale):
         self.screen_vel = DataScreen(pos, scale)
@@ -235,6 +241,50 @@ class AccelerationMonitor():
         self.screen_acc.set_text(str(self.acc))
 
 
+###Rocket object functions
+
+class RocketObject(Entity):
+    def __init__(self, **kwargs):
+        super().__init__()
+        #self.name = name
+        self.model = None
+        self.current_position = np.array([1,-4,10])
+        self.previous_position = np.array([0, 0, 0])
+        self.satellite = 0
+        self.speed = 0
+        self.time = None
+
+        self.current_orientation = np.array([0,0,0])
+        self.target_orientation = np.array([0, 0, 0])
+
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    """def input(self, key):
+        if key == 'space':
+            self.animate_x(2, duration=1)"""
+
+    def update(self):
+        #self.rotation = np.degrees(np.arctan2(*v.T[::-1]))
+        pos = self.position_getter()
+        new_pos = self.current_position - self.previous_position + pos
+        self.lookAt(new_pos[0],new_pos[2],new_pos[1])
+        print(new_pos)
+        #self.lookAt(0,1,0)
+        #print(pos)
+
+        #self.x += held_keys['d'] * time.dt * 10
+        #self.x -= held_keys['a'] * time.dt * 10
+
+def rotation_calculator(prev_pos, new_pos):
+    #https://stackoverflow.com/questions/18184848/calculate-pitch-and-yaw-between-two-unknown-points#:~:text=pitch%20%3D%20(float)%20(1,the%20two%20randomly%20generated%20points.
+    dX = new_pos[0] - prev_pos[0]
+    dY = new_pos[1] - prev_pos[1]
+    dZ = new_pos[2] - prev_pos[2]
+
+    yaw = np.atan2(dZ, dX)
+    pitch = np.atan2(np.sqrt(dZ * dZ + dX * dX), dY) + np.pi
+    return 0, yaw, pitch
 
 ###Buttons functions
 
@@ -264,6 +314,7 @@ if __name__ == '__main__':
 
 
     rocket = RocketObject(model = './obj/saturne5.obj', rotation = (-90 ,0 , 0), scale = 0.5, origin = (0, 0, -3))
+    #rocket = RocketObject(model = './obj/cirrus.obj', rotation = (-90 ,0 , 0), scale = 0.5, origin = (0, 0, -3))
 
     #screen = ScreenObject()
 
@@ -277,13 +328,13 @@ if __name__ == '__main__':
 
 
     ###Buttons
-    button_csv = Button(text="CSV", scale=(0.1,0.05), position=(3/6, 0, 0))
-    button_csv._on_click = CSV_button_action
+    """button_csv = Button(text="CSV", scale=(0.1,0.05), position=(3/6, 0, 0))
+    button_csv._on_click = CSV_button_action"""
 
-    button_start = Button(text="Start", scale=(0.1, 0.05), position=(4 / 6, 0, 0))
+    button_start = Button(text="Start", scale=(0.1, 0.05), position=(3 / 6, 0, 0))
     button_start._on_click = start_button_action
 
-    button_sleep = Button(text="Sleep", scale=(0.1, 0.05), position=(5 / 6, 0, 0))
+    button_sleep = Button(text="Sleep", scale=(0.1, 0.05), position=(4 / 6, 0, 0))
     button_sleep._on_click = sleep_button_action
 
 
