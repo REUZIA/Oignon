@@ -1,149 +1,208 @@
-DOC Oignon **ODC**
+# **DOC Oignon - ODC**
 
-# Avant qu'on ne touche plus le payload
-supprimer tout les elemnt test (dans le fichier test) de la board 
-vider la sd
-lancer le main.py
+## **Avant de toucher au payload**
+1. [ ] Supprimer tous les éléments de test (dans le fichier de test) sur la board.
+2. [ ] Vider la carte SD.
+3. [ ] Lancer le `main.py`.
 
-# Composant 
-- Carte PCB Lora + SD
+---
+
+## **Composants**
+
+- Carte PCB LoRa + SD
 - Carte PCB GPS + ICM
-- Carte sd 64G vert
-- 1x Antenne gps 
-- 2x Antenne lora 
-- 4 jst double alim
-- 6 jst 4pin 
-- carte alim(maitre en haut à droite voir cablage)
+- Carte SD 64G (verte)
+- 1x Antenne GPS
+- 2x Antenne LoRa
+- 4x Connecteurs JST double alim
+- 6x Connecteurs JST 4 pin
+- Carte d’alimentation (Maître, en haut à droite selon le schéma de câblage)
 
-# Shema et repartition code
-discode : https://discord.com/channels/610534406922174495/1263142960497688578/1291515100024541275
+---
 
-2 fichier; l'un avec les librery de compiler, l'autre avec les librery en clair, se qui à été mis sur la carte c des compiler pour gagnier espace mémoir 
+## **Schéma et répartition du code**
+![Schéma ODV](shema_odv.png)
 
-carte lier :
-  - séquanceur altimétrique (led tout les couleur)
-    - usb b + led + buzzer
-  - laison montant (Oingon upLink) 
-    - loral + rp
-  - ICM + gps 
-  - lora + sd
+### **Remarque**
+Le câblage de la Raspberry Pi et des modules (en haut à droite) est inversé (rouge = négatif, noir = positif).
 
 
-# Compiler 
-https://pypi.org/project/mpy-cross/
-```console
-mpy-cross my_app.py
-```
-tout les fichier non compier son dans "ODV_NonCompiter"
+Deux fichiers : 
+1. **Librairies compilées** (économie d'espace mémoire). `.mpi`
+2. **Librairies en clair**. `.py`
 
-# SD
-Protocole : 
-    nbspi = 0,
-    baudrate = 2000000,#même baudrate que le lora 
-    pinSck = 2,
-    pinMiso = 4, 
-    pinMosi = 3,
-    pinSC = 5,
 
-vas essayer de reconnecter sd quand écire si pas ouvert, à chaque réouverture réssuite var écire un nouv fichier "dataX.csv"
-se reconnec tout les 5 cyle si jamais déco (self.attAvantRecoSD)
-tout les 30 donner écrit il flush dans la sd (il écrite dessus ligne 107)
+### **Cartes liées :**
+- **Séquenceur altimétrique** (toutes les LEDs de différentes couleurs)
+  - USB B + LEDs + Buzzer
+- **Liaison montante (Oignon Uplink)**
+  - LoRa + Raspberry Pi
+- **ICM + GPS**
+  - 1 alim 2x + 1 JST 4x
+- **LoRa + SD** 
+  - 1 alim 2x + 3 JST 4x
 
-"faile init sd" => surment problème pin pour sd non reconue faudra tester (code en dessous ) dans le constructeur pour voir l'erreur 
+---
 
-```python
-self.sd = sdcard.SDCard(
-  self.spi, machine.Pin(self.pinSC)
-)  # Compatible avec le PCB
-```
+## **Détails des composants**
 
-sd prend formater en  fat
+### **Carte SD**
+- **Protocole SPI** :
+    - `spi_bus = 0`
+    - `baudrate = 2000000` (même que LoRa)
+    - `pinSck = 2`
+    - `pinMiso = 4`
+    - `pinMosi = 3`
+    - `pinSC = 5`
 
-# ICM
-Procole I2C : 
-    sda=Pin(6)
-    scl=Pin(7)
+#### **Fonctionnalités** :
+- Essaye de reconnecter la SD si elle n'est pas ouverte.
+- À chaque réouverture, crée un nouveau fichier "dataX.csv".
+- Se reconnecte tous les 5 cycles en cas de déconnexion.
+- Flushe les données toutes les 30 lignes (code ligne 107).
+
+Si l'initialisation échoue : 
+- Problème possible au niveau des pins, à vérifier dans le constructeur.
+écrire le code si dessous dans constructeur il envéra plus de détail 
 
 ```python
-Parametrage composant 
-self.icm.accelerometer_range = icm20948.RANGE_8G # Plage de détection de l'accélération maximale à ±8g # ? 0.7Mach envion 1.8G on prend au dessus pour être su r
-self.icm.acc_dlpf_cutoff = icm20948.FREQ_246_0 # Fréquence de coupure du filtre passe-bas de l'accéléromètre à 246 Hz
-    # beaucoup vibration => je doit filter beaucoup => pourquoi c si haut 
-# Configuration du gyroscope
-self.icm.gyro_full_scale = icm20948.FS_500_DPS # Plage de mesure de la rotation maximale à ±500 degrés par seconde
-self.icm.gyro_dlpf_cutoff = icm20948.G_FREQ_51_2 # Fréquence de coupure du filtre passe-bas du gyroscope à 11,6 Hz
-    # beaucoup vibration => je doit filter beaucoup => pourquoi c si haut 
+self.sd = sdcard.SDCard(self.spi, machine.Pin(self.pinSC))
 ```
 
-essaye de lire avec try si ya erreur essaye de se reco
+- La carte SD doit être formatée en FAT.(la 8g marche + souvant)
 
-# GPS
-gp :
-  rx = 9
-  tx = 8
+### **ICM**
+- **Protocole I2C** :
+    - `sda = Pin(6)`
+    - `scl = Pin(7)`
 
-il y une fonction bloquante, mais elle prend pas beaucoup de temps et même si il y a pas de fixe il continue à tournée
-+ peut pas fair d'erreur car lis spi si ya rien renvoie 0
-on sessayer de recuperai tout les **0.2s**
+#### **Paramétrage du composants** :
+- Accéléromètre :
+    ```python
+    self.icm.accelerometer_range = icm20948.RANGE_8G
+    self.icm.acc_dlpf_cutoff = icm20948.FREQ_246_0
+    ```
+    - Plage de détection maximale : ±8g.
+    - Fréquence de coupure du filtre passe-bas : 246 Hz (forte vibration = filtration élevée).
+    
+- Gyroscope :
+    ```python
+    self.icm.gyro_full_scale = icm20948.FS_500_DPS
+    self.icm.gyro_dlpf_cutoff = icm20948.G_FREQ_51_2
+    ```
+    - Rotation maximale : ±500 degrés par seconde.
+    - Filtre passe-bas : coupure à 11,6 Hz (idem pour les vibrations).
 
+- Lecture avec gestion d'erreurs (`try`), si erreur, tentative de reconnexion.
 
-# LORA sx
-lora:
-  spi_bus : 0
-  clk = 2
-  mosi = 3
-  miso = 4
-  cs = 27
-  irq = 20
-  rst = 15
-  gpio = 26
-initalisation de lora 
-band pasante (w):
-lora.setup(869.75,sf=12,cr=8)
+### **GPS**
+- **Protocole UART** :
+    - `rx = 9`
+    - `tx = 8`
 
-envoie + init + setup avec try, si sa marche pas ne fait rien 
-si le paquer pas envoyer totalement (prend plus de temps que temps de la boucle) ne l'envoie pas
+Fonction bloquante,mais même avec absence de fixation, elle continue de fonctionner sans provoquer d'erreurs (renvoie 0 si aucune donnée).
 
+Récupération des données toutes les **0.2s** max.
 
-# TEST 
-testModuleClass = tester tout les module
-test_LoraSD = batterie de teste avec la gnd station
-scanI2C : test les module i2C
-laison montant + sequanceur altimatrique : juste lis gpio
+### **LoRa SX**
+- **Protocole SPI** :
+    - `spi_bus = 0`
+    - `clk = 2`
+    - `mosi = 3`
+    - `miso = 4`
+    - `cs = 27`
+    - `irq = 20`
+    - `rst = 15`
+    - `gpio = 26`
 
+#### **Initialisation LoRa** :
+- **Bande passante** :
+    ```python
+      lora.setup(869.75, bw=500, sf=12, cr=8, power=14)
+    ```
+    - Fréquence : 869.75 MHz
+    - Spreading Factor : 12
+    - Code Rate : 8
+    - Power : 8
+    - Bande passante : 500
 
-# Erreur courante 
-```
+- Envoi et configuration sécurisés avec gestion d'erreurs (`try`). 
+tant qu'il na pas terminer d'envoyer le paque actuel il n'envera rien d'autre
+quand il est terminer il envera (cycle boucle + rapide que compression et envoie donner)
+
+---
+
+## A savoir
+
+### Mémoire il faut **Compiler** :
+- Utiliser [mpy-cross](https://pypi.org/project/mpy-cross/).
+- Compilation :
+    ```bash
+    mpy-cross my_app.py
+    ```
+- Tous les fichiers non compilés sont dans le dossier **ODV_NonCompiter**.
+
+### **Tests** :
+- **testModuleClass** : Tester tous les modules.
+  - écrire rien dans la fichier sd car pas assez de répétition (min 30)
+- **test_LoraSD** : Batterie de tests avec la station GND (se fait à coter de Rembouiller).
+- **scanI2C** : donne adresse modules I2C.
+- **Liaison montante + Séquenceur altimétrique** : Teste les GPIOs si renvoie 1.
+
+### led
+- ICM à led rouge quand courant passe dans cette pcb
+- Lora + SD : des qu'il y a mouvent spi (envoie / écrire donner sd) clignote en rouge
+- Altimétrique : led clignote si courant 
+- Laison montant, j'ai rien quand voyan, il faut tester
+
+---
+
+## **Erreurs courantes**
+
+### **Erreur mémoire** :
+```bash
 Traceback (most recent call last):
   File "<stdin>", line 6, in <module>
   File "/lib/lora.py", line 16, in <module>
   File "/lib/sx1262.py", line 2, in <module>
 MemoryError: memory allocation failed, allocating 4168 bytes
 ```
-Je sais pas bonne chance ! 
-OLD solution il faut forcée un garbege collectore dans le code 
-```python
-import gc
-gc.collect()
-```
 
-si sd problème
-  voir parti sd
+- Solution : Forcer la collecte de mémoire.
+    ```python
+    import gc
+    gc.collect()
+    ```
+- compiler 
 
-si problème non résolue => nuc la raspy
+### **Erreur carte SD** :
+- Voir la section SD.
 
-## module Tom
-si il clignote pas eteindre son module et le ralumer (débrancher jst)
-si c blanc se qu'il à a atein l'apoger si vous le voyer avant lenvoie il faut le reset (débrancher et rebrancher)
-doit enlever le timer max (quand ne clignote plus faut l'eteindre et rallumer )
+Si problème non résolu (et problème sd non reconu): flash nuck du Raspberry Pi.
 
-# main 
-att temps pour boucl 0.2 timeWaitBoucl
-quand allumer : 
-  envoie en lora(quand il peut) + sd
-  acceleroXYZ;gyroXYZ;latitude;longitude;altitude;nombre_satellite_utiliser;nombre_satellite_visible;vitesse;heure
-  ex: -0.03:-0.00:9.91;0.01:0.00:0.01;0:0:0.0:N;0:0:0.0:W;0.0;0;1;0.0;0:0:0.0
+---
 
+## **Module altimétrique**
+- Si le module ne clignote pas, éteindre et rallumer le module (débrancher le connecteur JST).
+- Si la LED blanche est allumée, cela signifie qu'il a atteint l'apogée. Si cela se produit avant l'envoi, il faut le **reset** (débrancher et rebrancher).
 
-# Remarque 
-le file alimentnat la raspy + module (en haut à droite) son inverser (rouge = - et noir = + )
+---
+
+## **Main Script**
+
+Le temps d'attente de la boucle principale est de **0.2 secondes** (`timeWaitBoucl`).
+![Schéma script](algo_ODV.png)
+
+### **Explication rapide** :
+- Init 
+  - tout est en spleep att de la gnd station un signal pour s'allumer (via interup)
+- À l'allumage :
+  - Envoi via LoRa (quand possible) + écriture sur SD.
+  - Données envoyées : `acceleroXYZ; gyroXYZ; latitude; longitude; altitude; nombre_satellite_utiliser; nombre_satellite_visible; vitesse; heure`.
+  - Exemple :
+    ```
+    -0.03:-0.00:9.91;0.01:0.00:0.01;0:0:0.0:N;0:0:0.0:W;0.0;0;1;0.0;0:0:0.0
+    ```
+- A etiendre(via interup)
+  - module en spleep
+  - n'envoie plus aucune donner
