@@ -55,7 +55,8 @@ Pour journaliser les échanges, il vous faudra d’activer l’option « All Ses
 # Utilisation de la console
 
 La console affichera les informations reçues automatiquement sous la forme de cette trame : 
-"RX Done”, message reçu, erreur (ou “ERR_NONE” si il n’y en as pas), RSSI (en dBm), temps depuis le dernier paquet (en ms) 
+> "RX Done”, message reçu, erreur (ou “ERR_NONE” si il n’y en as pas), RSSI (en dBm), temps depuis le dernier paquet (en ms) 
+
 Pour envoyer des paquets, il suffira d’entrer la commande suivante : 
 ```
 sxTX.send(b'[texte à envoyer]’) 
@@ -68,4 +69,4 @@ sxTX.send(b’SIG1’) #veille
 
 # Erreurs
 La plupart des erreurs sont liées à des erreurs de branchement, veuillez réviser le branchement à l’aide du chart suivant :  
-![Chart branchements](https://cdn.discordapp.com/attachments/163416842864558081/1282324096645861468/image-3.png)
+![Chart branchements](https://cdn.discordapp.com/attachments/163416842864558081/1282324096645861468/image-3.png](https://cdn.discordapp.com/attachments/163416842864558081/1282324096645861468/image-3.png?ex=6707cf61&is=67067de1&hm=6d0343497b9ef34624f24577a2042e85bad6db908cdf0ca70d41c1ab054c8590&)
