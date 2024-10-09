@@ -30,8 +30,6 @@ def apoger(pin) -> None:
         # envoyer gnd station
         lora.send(res)
          
-        # Désactiver l'interruption
-        gpAllumer.irq(handler=None)
 
 # detecter si on veut alluer
 def allumer(pin)->None:
