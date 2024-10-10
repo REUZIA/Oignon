@@ -7,13 +7,15 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import tkinter as tk
+#import tkinter as tk
+from tkinter import *
+import ttkbootstrap as tb
 from ursina import *
 import datetime as tm
 
 import gc
 
-
+global COM
 
 
 def update():
@@ -66,6 +68,51 @@ def update():
     None
 
 
+
+def setup_wizard():
+    """
+    Get the COM number
+    :return: string
+    """
+
+    #com = "COM1"
+    root = tb.Window(themename="superhero")
+    root.title("Setup Wizard")
+    #root.iconbitmap()
+    ws = root.winfo_screenwidth()  # width of the screen
+    hs = root.winfo_screenheight()  # height of the screen
+
+    # calculate x and y coordinates for the Tk root window
+    x = (ws / 2) - (500 / 2)
+    y = (hs / 2) - (300 / 2)
+    #root.geometry('500x350+%d+%d' % (x, y))
+    root.geometry('500x250')
+
+
+    #Declaring variables
+    #Labels
+    label1 = tb.Label(text="COM Selection")
+    label1.pack(pady=20)
+
+
+    e1 = tb.Entry(root)
+    e1.pack(pady=20)
+    #e1.grid(row=0, column=1)
+
+    button = tb.Button(root, text="Launch", command=lambda : launch(e1, root))
+    button.pack(pady=20)
+
+    #submit_button = tb.Button(root, text="Launch", command=root.destroy())
+    #submit_button.pack(pady=20)
+
+
+    root.mainloop()
+    return 0
+
+def launch(input, root):
+    global COM
+    COM= input.get()
+    root.destroy()
 
 def launch_app():
     app = Ursina(
@@ -140,7 +187,7 @@ class VerticalAltitude():
             position = pos,
             scale = scale, origin =(0,0))
         self.texts = [Text(text=str(i*100), wordwrap=10, origin =(0,0), world_scale = 120, position = (pos[0]+0.23, pos[1] + i*1.5, pos[2]+1), parent = self.anchor) for i in range(-5, 50)]
-        print(len(self.texts))
+        #print(len(self.texts))
 
     def set_height(self, alt_value):
         pos = self.anchor.position_getter()
@@ -269,7 +316,7 @@ class RocketObject(Entity):
         pos = self.position_getter()
         new_pos = self.current_position - self.previous_position + pos
         self.lookAt(new_pos[0],new_pos[2],new_pos[1])
-        print(new_pos)
+        #print(new_pos)
         #self.lookAt(0,1,0)
         #print(pos)
 
@@ -300,6 +347,10 @@ def sleep_button_action():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     #altitude_value = 0
+
+    #Launch ttk window to get COM number
+    setup_wizard()
+    print(COM) # Can access COM value here
 
     app = launch_app()
     """descr = dedent('''
@@ -342,7 +393,7 @@ if __name__ == '__main__':
     #velocity = VelocityMonitor((0, 0, 0), 0.15)
     #altitude.set_text('')
     rocket.position_setter((-5, 0 ,0))
-    print(rocket.position_getter())
+    #print(rocket.position_getter())
     rocket.lookAt((10,0,0))
     #print(rocket.position_getter())
 
