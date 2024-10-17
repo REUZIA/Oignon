@@ -42,7 +42,7 @@ Je tiens à remercier tous ceux qui ont pu aider de près ou de loin.
 - Hugo Allaire, car le code que nous utilisons est un fork du sien modifié et que ses conseils ont pu être très très précieux.  
 
 # Changement pour une V2 
-
 - Annoter le code
 - Vérifier son bon fonctionnement dans différentes conditions 
-- Ajouter un adaptateur permettant la charge en USB C
+- Ajouter un adaptateur permettant la charge en USB C (5V to 3V3)
+- Passer le code en Rust
